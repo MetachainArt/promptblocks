@@ -36,27 +36,43 @@ export default function DecomposePage() {
   const [analysisError, setAnalysisError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const compressImage = (file: File, maxSize: number = 2048): Promise<string> => {
+  const compressImage = (file: File): Promise<string> => {
+    const MAX_DIMENSION = 2048;
+    const MAX_BASE64_BYTES = 3 * 1024 * 1024; // base64 3MB 이하로 유지
+
     return new Promise((resolve) => {
       const reader = new FileReader();
       reader.onload = (e) => {
+        const originalBase64 = e.target?.result as string;
+
+        // 작은 파일은 바로 반환
+        if (file.size <= 2 * 1024 * 1024) {
+          resolve(originalBase64);
+          return;
+        }
+
         const img = new Image();
         img.onload = () => {
           const { width, height } = img;
-          // 이미 작으면 원본 base64 반환
-          if (width <= maxSize && height <= maxSize && file.size <= 3 * 1024 * 1024) {
-            resolve(e.target?.result as string);
-            return;
-          }
-          const scale = Math.min(maxSize / width, maxSize / height, 1);
+          const scale = Math.min(MAX_DIMENSION / width, MAX_DIMENSION / height, 1);
           const canvas = document.createElement('canvas');
           canvas.width = Math.round(width * scale);
           canvas.height = Math.round(height * scale);
           const ctx = canvas.getContext('2d')!;
           ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-          resolve(canvas.toDataURL('image/jpeg', 0.85));
+
+          // 품질을 낮추면서 크기 제한 맞추기
+          let quality = 0.85;
+          let result = canvas.toDataURL('image/jpeg', quality);
+
+          while (result.length > MAX_BASE64_BYTES && quality > 0.3) {
+            quality -= 0.1;
+            result = canvas.toDataURL('image/jpeg', quality);
+          }
+
+          resolve(result);
         };
-        img.src = e.target?.result as string;
+        img.src = originalBase64;
       };
       reader.readAsDataURL(file);
     });
@@ -214,7 +230,7 @@ export default function DecomposePage() {
                 <Upload className="h-12 w-12 text-purple-500" />
               </div>
               <h2 className="text-2xl font-bold text-gray-900 mb-2 z-10">이미지를 끌어다 놓으세요</h2>
-              <p className="text-gray-500 font-medium z-10">또는 클릭하여 업로드 (최대 10MB)</p>
+              <p className="text-gray-500 font-medium z-10">또는 클릭하여 업로드 (최대 20MB)</p>
             </div>
           ) : (
             <div className="relative rounded-[2rem] overflow-hidden bg-gray-50 min-h-[400px] flex items-center justify-center">
