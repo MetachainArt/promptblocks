@@ -52,6 +52,48 @@ export default function Home() {
           </div>
         </div>
 
+        {/* Fun Intro Section */}
+        <div className="mt-16 mx-auto max-w-4xl">
+          <div className="glass-panel p-8 rounded-2xl border border-white/10 bg-white/5 backdrop-blur-sm relative overflow-hidden">
+            <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-purple-500 via-pink-500 to-yellow-500"></div>
+            <h2 className="text-2xl font-bold text-center text-white mb-8 flex items-center justify-center gap-2">
+              <span>🚀</span> PromptBlocks를 <span className="text-[var(--color-primary)]">200% 즐기는 법</span>
+            </h2>
+            <div className="space-y-4">
+              <div className="flex items-start gap-4 p-4 rounded-xl bg-white/5 hover:bg-white/10 transition-colors">
+                <span className="text-2xl pt-1">🧩</span>
+                <p className="text-lg text-gray-200">
+                  내 최애 이미지, AI가 <span className="text-yellow-400 font-bold">13가지 블록</span>으로 와르르 분해해드려요!
+                </p>
+              </div>
+              <div className="flex items-start gap-4 p-4 rounded-xl bg-white/5 hover:bg-white/10 transition-colors">
+                <span className="text-2xl pt-1">📸</span>
+                <p className="text-lg text-gray-200">
+                  스타일, 캐릭터, 조명... 원하는 블록만 골라 <span className="text-pink-400 font-bold">레고처럼 찰칵!</span>
+                </p>
+              </div>
+              <div className="flex items-start gap-4 p-4 rounded-xl bg-gradient-to-r from-purple-500/20 to-pink-500/20 border border-purple-500/30 hover:border-purple-500/50 transition-colors">
+                <span className="text-2xl pt-1">🤪</span>
+                <p className="text-lg text-gray-200">
+                  상상력 고갈? <span className="text-purple-400 font-bold">무작위 조립</span> 버튼을 꾹 눌러보세요, 혼돈의 명작이 탄생합니다!
+                </p>
+              </div>
+              <div className="flex items-start gap-4 p-4 rounded-xl bg-white/5 hover:bg-white/10 transition-colors">
+                <span className="text-2xl pt-1">🤣</span>
+                <p className="text-lg text-gray-200">
+                  "어? 이게 되네?" 싶은 엉뚱하고 기발한 이미지에 <span className="text-green-400 font-bold">빵 터질지도 몰라요.</span>
+                </p>
+              </div>
+              <div className="flex items-start gap-4 p-4 rounded-xl bg-white/5 hover:bg-white/10 transition-colors">
+                <span className="text-2xl pt-1">✨</span>
+                <p className="text-lg text-gray-200">
+                  지금 바로 PromptBlocks에서 세상에 없던 <span className="text-cyan-400 font-bold">당신만의 꿀잼 조합</span>을 찾아보세요!
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+
         {/* 기능 소개 */}
         <div className="mt-24 grid gap-8 sm:grid-cols-3">
           <div className="rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] p-6">
