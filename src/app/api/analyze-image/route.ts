@@ -78,8 +78,14 @@ async function analyzeWithGPT(imageBase64: string, apiKey: string, model: string
   });
 
   if (!response.ok) {
-    const error = await response.json();
-    throw new Error(error.error?.message || 'OpenAI API 오류');
+    const text = await response.text();
+    try {
+      const error = JSON.parse(text);
+      throw new Error(error.error?.message || 'OpenAI API 오류');
+    } catch (e) {
+      if (e instanceof SyntaxError) throw new Error(`OpenAI API 오류: ${text.slice(0, 200)}`);
+      throw e;
+    }
   }
 
   const data = await response.json();
@@ -121,8 +127,14 @@ async function analyzeWithGemini(imageBase64: string, apiKey: string, model: str
   );
 
   if (!response.ok) {
-    const error = await response.json();
-    throw new Error(error.error?.message || 'Gemini API 오류');
+    const text = await response.text();
+    try {
+      const error = JSON.parse(text);
+      throw new Error(error.error?.message || 'Gemini API 오류');
+    } catch (e) {
+      if (e instanceof SyntaxError) throw new Error(`Gemini API 오류: ${text.slice(0, 200)}`);
+      throw e;
+    }
   }
 
   const data = await response.json();

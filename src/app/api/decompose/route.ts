@@ -53,8 +53,14 @@ async function decomposeWithGPT(prompt: string, apiKey: string): Promise<Decompo
   });
 
   if (!response.ok) {
-    const error = await response.json();
-    throw new Error(error.error?.message || 'OpenAI API 오류');
+    const text = await response.text();
+    try {
+      const error = JSON.parse(text);
+      throw new Error(error.error?.message || 'OpenAI API 오류');
+    } catch (e) {
+      if (e instanceof SyntaxError) throw new Error(`OpenAI API 오류: ${text.slice(0, 200)}`);
+      throw e;
+    }
   }
 
   const data = await response.json();
@@ -93,8 +99,14 @@ async function decomposeWithGemini(prompt: string, apiKey: string): Promise<Deco
   );
 
   if (!response.ok) {
-    const error = await response.json();
-    throw new Error(error.error?.message || 'Gemini API 오류');
+    const text = await response.text();
+    try {
+      const error = JSON.parse(text);
+      throw new Error(error.error?.message || 'Gemini API 오류');
+    } catch (e) {
+      if (e instanceof SyntaxError) throw new Error(`Gemini API 오류: ${text.slice(0, 200)}`);
+      throw e;
+    }
   }
 
   const data = await response.json();

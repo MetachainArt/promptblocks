@@ -101,7 +101,12 @@ export default function DecomposePage() {
         body: JSON.stringify({ image: base64 }),
       });
 
-      const data = await response.json();
+      let data;
+      try {
+        data = await response.json();
+      } catch {
+        throw new Error('서버 응답을 처리할 수 없습니다. 이미지 크기를 줄여보세요.');
+      }
 
       if (!response.ok) {
         throw new Error(data.error || '분석에 실패했습니다.');
