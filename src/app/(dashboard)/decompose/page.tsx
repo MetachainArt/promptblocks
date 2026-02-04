@@ -36,7 +36,33 @@ export default function DecomposePage() {
   const [analysisError, setAnalysisError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const compressImage = (file: File, maxSize: number = 2048): Promise<string> => {
+    return new Promise((resolve) => {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const img = new Image();
+        img.onload = () => {
+          const { width, height } = img;
+          // 이미 작으면 원본 base64 반환
+          if (width <= maxSize && height <= maxSize && file.size <= 3 * 1024 * 1024) {
+            resolve(e.target?.result as string);
+            return;
+          }
+          const scale = Math.min(maxSize / width, maxSize / height, 1);
+          const canvas = document.createElement('canvas');
+          canvas.width = Math.round(width * scale);
+          canvas.height = Math.round(height * scale);
+          const ctx = canvas.getContext('2d')!;
+          ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+          resolve(canvas.toDataURL('image/jpeg', 0.85));
+        };
+        img.src = e.target?.result as string;
+      };
+      reader.readAsDataURL(file);
+    });
+  };
+
+  const handleImageSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
@@ -45,17 +71,14 @@ export default function DecomposePage() {
       return;
     }
 
-    if (file.size > 10 * 1024 * 1024) {
-      toast.error('파일 크기는 10MB 이하만 가능합니다.');
+    if (file.size > 20 * 1024 * 1024) {
+      toast.error('파일 크기는 20MB 이하만 가능합니다.');
       return;
     }
 
     setImageFile(file);
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      setImagePreview(e.target?.result as string);
-    };
-    reader.readAsDataURL(file);
+    const preview = await compressImage(file);
+    setImagePreview(preview);
   };
 
   const handleRemoveImage = () => {
@@ -84,11 +107,7 @@ export default function DecomposePage() {
     setAnalysisError(null);
 
     try {
-      const base64 = await new Promise<string>((resolve) => {
-        const reader = new FileReader();
-        reader.onload = (e) => resolve(e.target?.result as string);
-        reader.readAsDataURL(imageFile);
-      });
+      const base64 = imagePreview!;
 
       const response = await fetch('/api/analyze-image', {
         method: 'POST',
