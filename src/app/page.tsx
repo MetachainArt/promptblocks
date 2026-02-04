@@ -14,13 +14,13 @@ export default function Home() {
           <div className="flex items-center gap-4">
             <Link
               href="/login"
-              className="text-sm font-medium text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)]"
+              className="text-sm font-medium text-[var(--color-text-secondary)] hover:text-black"
             >
               로그인
             </Link>
             <Link
               href="/signup"
-              className="rounded-md bg-[var(--color-primary)] px-4 py-2 text-sm font-medium text-white hover:bg-[var(--color-primary-hover)]"
+              className="rounded-md bg-[var(--color-primary)] px-4 py-2 text-sm font-medium text-white hover:bg-[var(--color-primary-hover)] hover:text-black"
             >
               시작하기
             </Link>
@@ -44,7 +44,7 @@ export default function Home() {
           <div className="mt-10 flex justify-center gap-4">
             <Link
               href="/signup"
-              className="inline-flex items-center gap-2 rounded-md bg-[var(--color-primary)] px-6 py-3 text-base font-medium text-white hover:bg-[var(--color-primary-hover)]"
+              className="inline-flex items-center gap-2 rounded-md bg-[var(--color-primary)] px-6 py-3 text-base font-medium text-white hover:bg-[var(--color-primary-hover)] hover:text-black"
             >
               무료로 시작하기
               <ArrowRight className="h-4 w-4" />
