@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { BLOCK_TYPES, type BlockType, type DecomposeResult } from '@/types';
-import { createClient } from '@/lib/supabase/server';
 
 const SYSTEM_PROMPT = `당신은 이미지 생성 프롬프트 분석 전문가입니다.
 주어진 프롬프트를 다음 13가지 요소로 분해하세요. 각 요소가 프롬프트에 없으면 빈 문자열로 반환하세요.
@@ -70,7 +69,7 @@ async function decomposeWithGPT(prompt: string, apiKey: string): Promise<Decompo
 
 async function decomposeWithGemini(prompt: string, apiKey: string): Promise<DecomposeResult> {
   const response = await fetch(
-    `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`,
+    `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`,
     {
       method: 'POST',
       headers: {
@@ -132,15 +131,6 @@ function parseResult(content: string): DecomposeResult {
 
 export async function POST(request: NextRequest) {
   try {
-    const supabase = await createClient();
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-
-    if (!user) {
-      return NextResponse.json({ error: '로그인이 필요합니다.' }, { status: 401 });
-    }
-
     const apiKey = request.headers.get('X-API-Key');
     const aiProvider = request.headers.get('X-AI-Provider') as 'gpt' | 'gemini';
 

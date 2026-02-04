@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { BLOCK_TYPES, type DecomposeResult } from '@/types';
-import { createClient } from '@/lib/supabase/server';
 
 // 사용자 지침 기반 이미지 분석 시스템 프롬프트
 const IMAGE_ANALYSIS_PROMPT = `당신은 최상급 Image Prompt Rewriter (이미지 프롬프트 재작성 전문가)입니다.
@@ -155,18 +154,9 @@ function parseResult(content: string): { prompt: string; result: DecomposeResult
 
 export async function POST(request: NextRequest) {
   try {
-    const supabase = await createClient();
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-
-    if (!user) {
-      return NextResponse.json({ error: '로그인이 필요합니다.' }, { status: 401 });
-    }
-
     const apiKey = request.headers.get('X-API-Key');
     const aiProvider = request.headers.get('X-AI-Provider') as 'gpt' | 'gemini';
-    const aiModel = request.headers.get('X-AI-Model') || (aiProvider === 'gemini' ? 'gemini-3-pro-preview' : 'gpt-5.2');
+    const aiModel = request.headers.get('X-AI-Model') || (aiProvider === 'gemini' ? 'gemini-2.5-flash-preview-05-20' : 'gpt-4o');
 
     if (!apiKey) {
       return NextResponse.json({ error: 'API 키가 필요합니다.' }, { status: 401 });
