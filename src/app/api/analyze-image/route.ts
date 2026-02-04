@@ -156,7 +156,7 @@ export async function POST(request: NextRequest) {
   try {
     const apiKey = request.headers.get('X-API-Key');
     const aiProvider = request.headers.get('X-AI-Provider') as 'gpt' | 'gemini';
-    const aiModel = request.headers.get('X-AI-Model') || (aiProvider === 'gemini' ? 'gemini-2.5-flash-preview-05-20' : 'gpt-4o');
+    const aiModel = request.headers.get('X-AI-Model') || (aiProvider === 'gemini' ? 'gemini-3-flash-preview' : 'gpt-5.2');
 
     if (!apiKey) {
       return NextResponse.json({ error: 'API 키가 필요합니다.' }, { status: 401 });

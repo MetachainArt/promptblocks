@@ -11,15 +11,15 @@ import { getApiKey } from '@/lib/userSettings';
 
 const AI_MODELS = {
   gpt: [
-    { id: 'gpt-4o', name: 'GPT-4o (Recommended)' },
-    { id: 'gpt-4o-mini', name: 'GPT-4o Mini' },
-    { id: 'gpt-4-turbo', name: 'GPT-4 Turbo' },
+    { id: 'gpt-5.2', name: 'GPT-5.2 (Recommended)' },
+    { id: 'gpt-5-mini', name: 'GPT-5 Mini' },
+    { id: 'gpt-4o', name: 'GPT-4o' },
   ],
   gemini: [
-    { id: 'gemini-2.5-flash-preview-05-20', name: 'Gemini 2.5 Flash (Recommended)' },
-    { id: 'gemini-2.5-pro-preview-05-06', name: 'Gemini 2.5 Pro' },
+    { id: 'gemini-3-pro-preview', name: 'Gemini 3 Pro (Recommended)' },
+    { id: 'gemini-3-flash-preview', name: 'Gemini 3 Flash' },
+    { id: 'gemini-2.5-flash-preview-05-20', name: 'Gemini 2.5 Flash' },
     { id: 'gemini-2.0-flash', name: 'Gemini 2.0 Flash' },
-    { id: 'gemini-1.5-pro', name: 'Gemini 1.5 Pro' },
   ],
 };
 
@@ -27,7 +27,7 @@ export default function DecomposePage() {
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [selectedAi, setSelectedAi] = useState<'gpt' | 'gemini'>('gpt');
-  const [selectedModel, setSelectedModel] = useState('gpt-4o');
+  const [selectedModel, setSelectedModel] = useState('gpt-5.2');
   const [isLoading, setIsLoading] = useState(false);
   const [result, setResult] = useState<DecomposeResult | null>(null);
   const [generatedPrompt, setGeneratedPrompt] = useState<string | null>(null);

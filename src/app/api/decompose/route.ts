@@ -43,7 +43,7 @@ async function decomposeWithGPT(prompt: string, apiKey: string): Promise<Decompo
       Authorization: `Bearer ${apiKey}`,
     },
     body: JSON.stringify({
-      model: 'gpt-4o-mini',
+      model: 'gpt-5-mini',
       messages: [
         { role: 'system', content: SYSTEM_PROMPT },
         { role: 'user', content: `다음 프롬프트를 분해해주세요:\n\n${prompt}` },
@@ -69,7 +69,7 @@ async function decomposeWithGPT(prompt: string, apiKey: string): Promise<Decompo
 
 async function decomposeWithGemini(prompt: string, apiKey: string): Promise<DecomposeResult> {
   const response = await fetch(
-    `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`,
+    `https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=${apiKey}`,
     {
       method: 'POST',
       headers: {
