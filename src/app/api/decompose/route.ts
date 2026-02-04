@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { BLOCK_TYPES, type BlockType, type DecomposeResult } from '@/types';
+import { BLOCK_TYPES, type DecomposeResult } from '@/types';
 
 const SYSTEM_PROMPT = `당신은 이미지 생성 프롬프트 분석 전문가입니다.
 주어진 프롬프트를 다음 13가지 요소로 분해하세요. 각 요소가 프롬프트에 없으면 빈 문자열로 반환하세요.
@@ -35,7 +35,7 @@ const SYSTEM_PROMPT = `당신은 이미지 생성 프롬프트 분석 전문가�
   "tech_params": "..."
 }`;
 
-async function decomposeWithGPT(prompt: string, apiKey: string): Promise<DecomposeResult> {
+async function decomposeWithGPT(prompt: string, apiKey: string, model: string = 'gpt-5-mini'): Promise<DecomposeResult> {
   const response = await fetch('https://api.openai.com/v1/chat/completions', {
     method: 'POST',
     headers: {
@@ -43,7 +43,7 @@ async function decomposeWithGPT(prompt: string, apiKey: string): Promise<Decompo
       Authorization: `Bearer ${apiKey}`,
     },
     body: JSON.stringify({
-      model: 'gpt-5-mini',
+      model,
       messages: [
         { role: 'system', content: SYSTEM_PROMPT },
         { role: 'user', content: `다음 프롬프트를 분해해주세요:\n\n${prompt}` },
@@ -73,9 +73,9 @@ async function decomposeWithGPT(prompt: string, apiKey: string): Promise<Decompo
   return parseResult(content);
 }
 
-async function decomposeWithGemini(prompt: string, apiKey: string): Promise<DecomposeResult> {
+async function decomposeWithGemini(prompt: string, apiKey: string, model: string = 'gemini-3-flash-preview'): Promise<DecomposeResult> {
   const response = await fetch(
-    `https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=${apiKey}`,
+    `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`,
     {
       method: 'POST',
       headers: {
@@ -157,12 +157,34 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: '프롬프트를 입력해주세요.' }, { status: 400 });
     }
 
-    let result: DecomposeResult;
+    const GEMINI_FALLBACKS = ['gemini-3-flash-preview', 'gemini-2.5-flash-preview-05-20', 'gemini-2.0-flash'];
+    const GPT_FALLBACKS = ['gpt-5-mini', 'gpt-4o'];
 
-    if (aiProvider === 'gemini') {
-      result = await decomposeWithGemini(prompt, apiKey);
-    } else {
-      result = await decomposeWithGPT(prompt, apiKey);
+    let result: DecomposeResult | null = null;
+    const modelsToTry = aiProvider === 'gemini' ? GEMINI_FALLBACKS : GPT_FALLBACKS;
+    let lastError: Error | null = null;
+
+    for (const model of modelsToTry) {
+      try {
+        if (aiProvider === 'gemini') {
+          result = await decomposeWithGemini(prompt, apiKey, model);
+        } else {
+          result = await decomposeWithGPT(prompt, apiKey, model);
+        }
+        if (result) break;
+      } catch (e) {
+        lastError = e instanceof Error ? e : new Error(String(e));
+        const msg = lastError.message.toLowerCase();
+        if (msg.includes('overloaded') || msg.includes('503') || msg.includes('429') || msg.includes('rate') || msg.includes('capacity')) {
+          console.log(`Model ${model} overloaded, trying fallback...`);
+          continue;
+        }
+        throw lastError;
+      }
+    }
+
+    if (!result) {
+      throw lastError || new Error('AI 응답이 비어있습니다.');
     }
 
     return NextResponse.json({ result });

@@ -164,6 +164,9 @@ function parseResult(content: string): { prompt: string; result: DecomposeResult
   }
 }
 
+const GEMINI_FALLBACKS = ['gemini-3-flash-preview', 'gemini-2.5-flash-preview-05-20', 'gemini-2.0-flash'];
+const GPT_FALLBACKS = ['gpt-5.2', 'gpt-5-mini', 'gpt-4o'];
+
 export async function POST(request: NextRequest) {
   try {
     const apiKey = request.headers.get('X-API-Key');
@@ -181,16 +184,32 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: '이미지가 필요합니다.' }, { status: 400 });
     }
 
-    let content: string;
+    let content: string | null = null;
+    const fallbacks = aiProvider === 'gemini' ? GEMINI_FALLBACKS : GPT_FALLBACKS;
+    const modelsToTry = [aiModel, ...fallbacks.filter((m) => m !== aiModel)];
+    let lastError: Error | null = null;
 
-    if (aiProvider === 'gemini') {
-      content = await analyzeWithGemini(image, apiKey, aiModel);
-    } else {
-      content = await analyzeWithGPT(image, apiKey, aiModel);
+    for (const model of modelsToTry) {
+      try {
+        if (aiProvider === 'gemini') {
+          content = await analyzeWithGemini(image, apiKey, model);
+        } else {
+          content = await analyzeWithGPT(image, apiKey, model);
+        }
+        if (content) break;
+      } catch (e) {
+        lastError = e instanceof Error ? e : new Error(String(e));
+        const msg = lastError.message.toLowerCase();
+        if (msg.includes('overloaded') || msg.includes('503') || msg.includes('429') || msg.includes('rate') || msg.includes('capacity')) {
+          console.log(`Model ${model} overloaded, trying fallback...`);
+          continue;
+        }
+        throw lastError;
+      }
     }
 
     if (!content) {
-      throw new Error('AI 응답이 비어있습니다.');
+      throw lastError || new Error('AI 응답이 비어있습니다.');
     }
 
     const { prompt, result } = parseResult(content);
