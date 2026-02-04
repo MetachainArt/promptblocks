@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="ko"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>PromptBlocks - Pop Bento Deconstruct</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,typography"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&amp;family=Noto+Sans+KR:wght@400;500;700;900&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/icon?family=Material+Icons+Outlined" rel="stylesheet"/>
+<script>
+    tailwind.config = {
+        theme: {
+            extend: {
+                colors: {
+                    primary: "#06b6d4",
+                    secondary: "#7c3aed",
+                    pop: {
+                        purple: "#8B5CF6",
+                        cyan: "#06B6D4",
+                        pink: "#EC4899",
+                        yellow: "#F59E0B",
+                        dark: "#111827"
+                    }
+                },
+                fontFamily: {
+                    display: ["Inter", "Noto+Sans+KR", "sans-serif"],
+                },
+                boxShadow: {
+                    'bento': '0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03)',
+                    'bento-hover': '0 10px 15px -3px rgba(0, 0, 0, 0.08), 0 4px 6px -2px rgba(0, 0, 0, 0.04)',
+                    'pop': '4px 4px 0px 0px rgba(0,0,0,1)',
+                    'pop-sm': '2px 2px 0px 0px rgba(0,0,0,1)',
+                }
+            },
+        },
+    };
+</script>
+<style type="text/tailwindcss">
+    @layer utilities {
+        .bento-card {
+            @apply bg-white rounded-[2rem] border border-gray-100 shadow-bento transition-all duration-300;
+        }
+        .bento-card:hover {
+            @apply shadow-bento-hover -translate-y-1;
+        }
+        .sidebar-active {
+            @apply bg-pop-purple text-white shadow-lg shadow-purple-200;
+        }
+        .sidebar-item {
+            @apply text-gray-500 hover:bg-gray-100 hover:text-gray-900;
+        }
+    }
+    body {
+        background-color: #F3F4F6;}
+</style>
+</head>
+<body class="text-gray-800 min-h-screen font-display overflow-x-hidden">
+<aside class="fixed top-0 left-0 w-72 h-full z-50 bg-white border-r border-gray-200 flex flex-col">
+<div class="h-24 flex items-center gap-3 px-8 border-b border-gray-100">
+<div class="w-10 h-10 rounded-xl bg-gray-900 flex items-center justify-center transform rotate-3">
+<span class="material-icons-outlined text-white text-xl">grid_view</span>
+</div>
+<span class="text-2xl font-black tracking-tight text-gray-900">PromptBlocks</span>
+</div>
+<nav class="p-6 space-y-3 flex-grow">
+<a class="flex items-center gap-4 px-6 py-4 rounded-2xl sidebar-active font-bold transition-all group" href="#">
+<span class="material-icons-outlined text-2xl">image_search</span>
+<span>프롬프트 분해</span>
+</a>
+<a class="flex items-center gap-4 px-6 py-4 rounded-2xl sidebar-item font-semibold transition-all group" href="#">
+<span class="material-icons-outlined text-2xl">inventory_2</span>
+<span>블록 라이브러리</span>
+</a>
+<a class="flex items-center gap-4 px-6 py-4 rounded-2xl sidebar-item font-semibold transition-all group" href="#">
+<span class="material-icons-outlined text-2xl">extension</span>
+<span>블록 조립</span>
+</a>
+<a class="flex items-center gap-4 px-6 py-4 rounded-2xl sidebar-item font-semibold transition-all group" href="#">
+<span class="material-icons-outlined text-2xl">settings</span>
+<span>설정</span>
+</a>
+</nav>
+<div class="p-6 border-t border-gray-100">
+<div class="flex items-center gap-3 mb-4 px-2 bg-gray-50 p-3 rounded-2xl">
+<div class="w-10 h-10 rounded-full bg-gradient-to-tr from-pink-400 to-orange-400 flex items-center justify-center text-white font-bold">
+                M
+            </div>
+<div class="flex-1 min-w-0">
+<p class="text-sm font-bold text-gray-900 truncate">metachain.art</p>
+<p class="text-xs text-purple-600 font-medium truncate">Pro Plan</p>
+</div>
+</div>
+</div>
+</aside>
+<main class="ml-72 min-h-screen p-8 relative z-10 flex flex-col">
+<header class="flex justify-end items-center mb-8 gap-4">
+<button class="w-12 h-12 rounded-2xl bg-white border border-gray-200 flex items-center justify-center text-gray-400 hover:text-pop-purple hover:border-pop-purple transition-colors shadow-sm">
+<span class="material-icons-outlined">notifications</span>
+</button>
+<button class="w-12 h-12 rounded-2xl bg-white border border-gray-200 flex items-center justify-center text-gray-400 hover:text-pop-purple hover:border-pop-purple transition-colors shadow-sm">
+<span class="material-icons-outlined">help_outline</span>
+</button>
+</header>
+<div class="max-w-6xl mx-auto w-full flex-grow flex flex-col gap-6">
+<div class="mb-2">
+<h1 class="text-4xl font-black text-gray-900 mb-2 tracking-tight">프롬프트 분해 <span class="text-pop-purple">Tool</span></h1>
+<p class="text-gray-500 font-medium text-lg">이미지를 업로드하여 AI가 사용한 프롬프트를 13가지 요소로 정밀 분석합니다.</p>
+</div>
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+<div class="lg:col-span-8 bg-white rounded-[2.5rem] border-[6px] border-pop-purple p-2 shadow-2xl shadow-purple-100/50 relative group transition-transform duration-500 hover:scale-[1.01]">
+<div class="h-full bg-gray-50 rounded-[2rem] border-2 border-dashed border-gray-300 group-hover:border-pop-purple/50 group-hover:bg-purple-50/30 transition-all duration-300 flex flex-col items-center justify-center p-12 relative overflow-hidden cursor-pointer">
+<div class="absolute top-10 left-10 w-20 h-20 bg-yellow-200 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob"></div>
+<div class="absolute top-10 right-10 w-20 h-20 bg-purple-200 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob animation-delay-2000"></div>
+<div class="absolute -bottom-8 left-20 w-20 h-20 bg-pink-200 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob animation-delay-4000"></div>
+<div class="w-24 h-24 rounded-3xl bg-white shadow-lg flex items-center justify-center mb-6 transform group-hover:-translate-y-2 transition-transform duration-300 z-10">
+<span class="material-icons-outlined text-pop-purple text-5xl">cloud_upload</span>
+</div>
+<h2 class="text-2xl font-bold text-gray-900 mb-2 z-10">이미지를 끌어다 놓으세요</h2>
+<p class="text-gray-500 font-medium z-10">또는 클릭하여 업로드 (최대 10MB)</p>
+<input class="absolute inset-0 opacity-0 cursor-pointer z-20" type="file"/>
+</div>
+</div>
+<div class="lg:col-span-4 flex flex-col gap-6">
+<div class="bento-card p-8 flex flex-col gap-6 h-full justify-center bg-white">
+<div>
+<label class="block text-sm font-bold text-gray-700 mb-2 ml-1">AI 모델 선택</label>
+<div class="relative">
+<select class="w-full appearance-none bg-gray-50 border border-gray-200 rounded-xl text-gray-700 font-medium px-5 py-4 outline-none focus:ring-2 focus:ring-pop-purple focus:border-transparent transition-all">
+<option>OpenAI</option>
+<option>Google Gemini</option>
+<option>Claude</option>
+</select>
+<span class="material-icons-outlined absolute right-4 top-4 text-gray-400 pointer-events-none">expand_more</span>
+</div>
+</div>
+<div>
+<label class="block text-sm font-bold text-gray-700 mb-2 ml-1">모델 버전</label>
+<div class="relative">
+<select class="w-full appearance-none bg-gray-50 border border-gray-200 rounded-xl text-gray-700 font-medium px-5 py-4 outline-none focus:ring-2 focus:ring-pop-purple focus:border-transparent transition-all">
+<option>GPT-4o (Latest)</option>
+<option>GPT-4 Turbo</option>
+<option>Gemini 1.5 Pro</option>
+</select>
+<span class="material-icons-outlined absolute right-4 top-4 text-gray-400 pointer-events-none">expand_more</span>
+</div>
+</div>
+</div>
+<button class="w-full py-6 rounded-[2rem] bg-gradient-to-r from-violet-600 via-purple-600 to-fuchsia-600 text-white font-bold text-lg shadow-xl shadow-purple-200 hover:shadow-2xl hover:shadow-purple-300 transform hover:-translate-y-1 transition-all flex items-center justify-center gap-3">
+<span class="material-icons-outlined text-2xl">auto_fix_high</span>
+<span>이미지 분석 시작</span>
+</button>
+</div>
+<div class="lg:col-span-4 bento-card p-8 group hover:bg-cyan-50/50 transition-colors">
+<div class="w-14 h-14 rounded-2xl bg-cyan-100 text-cyan-600 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
+<span class="material-icons-outlined text-3xl">psychology</span>
+</div>
+<h3 class="text-xl font-bold text-gray-900 mb-2">정교한 분석</h3>
+<p class="text-sm text-gray-500 font-medium leading-relaxed">화풍, 구도, 조명 등 13가지 전문 프롬프트 요소를 AI가 정밀 추출합니다.</p>
+</div>
+<div class="lg:col-span-4 bento-card p-8 group hover:bg-green-50/50 transition-colors">
+<div class="w-14 h-14 rounded-2xl bg-green-100 text-green-600 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
+<span class="material-icons-outlined text-3xl">save</span>
+</div>
+<h3 class="text-xl font-bold text-gray-900 mb-2">즉시 저장</h3>
+<p class="text-sm text-gray-500 font-medium leading-relaxed">추출된 각 요소들을 개별 블록으로 라이브러리에 바로 저장하세요.</p>
+</div>
+<div class="lg:col-span-4 bento-card p-8 group hover:bg-orange-50/50 transition-colors">
+<div class="w-14 h-14 rounded-2xl bg-orange-100 text-orange-600 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
+<span class="material-icons-outlined text-3xl">bolt</span>
+</div>
+<h3 class="text-xl font-bold text-gray-900 mb-2">빠른 워크플로우</h3>
+<p class="text-sm text-gray-500 font-medium leading-relaxed">분해한 요소들을 드래그 앤 드롭으로 재조합하여 새 이미지를 만드세요.</p>
+</div>
+</div>
+</div>
+</main>
+
+</body></html>

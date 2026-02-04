@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="ko"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>PromptBlocks - Settings</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        brand: "#4F46E5", // Indigo
+                        pop: {
+                            lime: "#84CC16", // Lime 500
+                            limeLight: "#D9F99D", // Lime 200
+                            pink: "#F472B6",
+                            cyan: "#22D3EE",
+                        },
+                        surface: "#F3F4F6", // Light Gray
+                    },
+                    fontFamily: {
+                        sans: ["Inter", "sans-serif"],
+                    },
+                    borderRadius: {
+                        'bento': '1.75rem',
+                    },
+                    boxShadow: {
+                        'bento': '0 4px 6px -1px rgba(0, 0, 0, 0.02), 0 10px 15px -3px rgba(0, 0, 0, 0.04)',
+                        'bento-hover': '0 20px 25px -5px rgba(0, 0, 0, 0.05), 0 10px 10px -5px rgba(0, 0, 0, 0.02)',
+                    }
+                },
+            },
+        };
+    </script>
+<style>
+        body {
+            background-color: #F3F4F6;
+        }::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }.toggle-checkbox:checked {
+            right: 0;
+            border-color: #84CC16;
+        }
+        .toggle-checkbox:checked + .toggle-label {
+            background-color: #84CC16;
+        }
+        .bento-card {
+            background: white;
+            border-radius: 1.75rem;
+            transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+            border: 1px solid white;
+        }
+        .bento-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.05), 0 10px 10px -5px rgba(0, 0, 0, 0.02);
+            border-color: rgba(79, 70, 229, 0.1);
+        }
+    </style>
+</head>
+<body class="bg-surface text-slate-800 min-h-screen font-sans antialiased selection:bg-pop-lime selection:text-white flex overflow-hidden">
+<aside class="w-72 bg-white border-r border-slate-200 flex flex-col h-screen z-20 shadow-sm relative">
+<div class="p-8 flex items-center gap-3">
+<div class="w-10 h-10 bg-brand rounded-xl flex items-center justify-center text-white shadow-md transform -rotate-3 hover:rotate-0 transition-transform duration-300">
+<span class="material-icons-round text-xl">grid_view</span>
+</div>
+<h1 class="text-xl font-extrabold tracking-tight text-slate-900">PromptBlocks</h1>
+</div>
+<nav class="flex-1 px-4 space-y-2 mt-2">
+<a class="flex items-center gap-3 px-4 py-3.5 text-slate-500 hover:text-slate-900 hover:bg-slate-50 rounded-2xl transition-all duration-200 group font-medium" href="#">
+<span class="material-icons-round text-xl text-slate-400 group-hover:text-brand transition-colors">auto_fix_high</span>
+<span class="tracking-wide">프롬프트 분해</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3.5 text-slate-500 hover:text-slate-900 hover:bg-slate-50 rounded-2xl transition-all duration-200 group font-medium" href="#">
+<span class="material-icons-round text-xl text-slate-400 group-hover:text-brand transition-colors">library_books</span>
+<span class="tracking-wide">블록 라이브러리</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3.5 text-slate-500 hover:text-slate-900 hover:bg-slate-50 rounded-2xl transition-all duration-200 group font-medium" href="#">
+<span class="material-icons-round text-xl text-slate-400 group-hover:text-brand transition-colors">extension</span>
+<span class="tracking-wide">블록 조립</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3.5 bg-brand text-white shadow-lg shadow-indigo-200 rounded-2xl transition-all font-semibold" href="#">
+<span class="material-icons-round text-xl">settings</span>
+<span class="tracking-wide">설정</span>
+</a>
+</nav>
+<div class="p-6 border-t border-slate-100">
+<div class="bg-slate-50 p-3 rounded-2xl border border-slate-100 flex items-center gap-3">
+<div class="w-9 h-9 rounded-full bg-gradient-to-br from-pop-lime to-green-400 flex items-center justify-center text-xs font-bold text-white shadow-sm ring-2 ring-white">N</div>
+<div class="flex-1 min-w-0">
+<p class="text-xs font-bold text-slate-900 truncate">Neo Artist</p>
+<p class="text-[10px] font-medium text-slate-500 truncate">metachain.art@gmail.com</p>
+</div>
+<button class="text-slate-400 hover:text-red-500 transition-colors">
+<span class="material-icons-round text-lg">logout</span>
+</button>
+</div>
+</div>
+</aside>
+<main class="flex-1 overflow-y-auto h-screen relative">
+<header class="sticky top-0 z-10 bg-surface/90 backdrop-blur-md px-10 py-6 flex items-center justify-between">
+<div>
+<h2 class="text-3xl font-extrabold text-slate-900 tracking-tight">Settings</h2>
+<p class="text-slate-500 text-sm mt-1 font-medium">앱 설정 및 구성 관리</p>
+</div>
+<div class="flex items-center gap-3">
+<button class="w-10 h-10 bg-white rounded-full flex items-center justify-center text-slate-400 hover:text-brand hover:shadow-md transition-all border border-transparent hover:border-slate-100">
+<span class="material-icons-round">help_outline</span>
+</button>
+<button class="w-10 h-10 bg-white rounded-full flex items-center justify-center text-slate-400 hover:text-brand hover:shadow-md transition-all relative border border-transparent hover:border-slate-100">
+<span class="material-icons-round">notifications</span>
+<span class="absolute top-2 right-2 w-2.5 h-2.5 bg-pop-pink rounded-full border-2 border-white"></span>
+</button>
+</div>
+</header>
+<div class="max-w-6xl mx-auto px-10 pb-20 space-y-6">
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+<div class="col-span-1 md:col-span-2 lg:col-span-3 bento-card p-1 shadow-bento bg-gradient-to-r from-blue-50 to-indigo-50 border-blue-100">
+<div class="bg-white/60 rounded-[1.5rem] p-6 h-full backdrop-blur-sm flex flex-col md:flex-row gap-5 items-start md:items-center">
+<div class="w-14 h-14 rounded-2xl bg-white shadow-sm flex items-center justify-center text-brand shrink-0">
+<span class="material-icons-round text-3xl">security</span>
+</div>
+<div class="flex-1">
+<h4 class="font-bold text-slate-800 text-lg">보안 및 프라이버시 안내</h4>
+<p class="text-sm text-slate-500 mt-1 leading-relaxed max-w-3xl">
+                                귀하의 API 키는 최신 암호화 기술로 보호되며 브라우저의 로컬 스토리지에만 저장됩니다. 서버로 절대 전송되지 않으며, 오직 AI 요청 발생 시에만 해당 서비스로 안전하게 라우팅됩니다.
+                            </p>
+</div>
+</div>
+</div>
+<div class="col-span-1 bento-card shadow-bento group cursor-pointer relative overflow-hidden ring-2 ring-brand ring-offset-2 ring-offset-surface">
+<div class="absolute top-0 right-0 p-5 z-10">
+<div class="relative inline-block w-12 h-6 align-middle select-none transition duration-200 ease-in">
+<input checked="" class="toggle-checkbox absolute block w-6 h-6 rounded-full bg-white border-4 border-pop-lime appearance-none cursor-pointer transition-all duration-300 left-6 drop-shadow-sm" disabled="" id="toggle1" name="toggle" type="checkbox"/>
+<label class="toggle-label block overflow-hidden h-6 rounded-full bg-pop-lime cursor-pointer" for="toggle1"></label>
+</div>
+</div>
+<div class="p-8 h-full flex flex-col">
+<div class="w-16 h-16 bg-slate-900 rounded-3xl flex items-center justify-center mb-6 shadow-lg shadow-slate-200 transform group-hover:scale-110 transition-transform duration-300">
+<img alt="OpenAI Logo" class="w-8 h-8 filter invert" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBmjr1sReSiYEmxi3NPu10LX9V3gIH75PGPVMbfdw1-CVhKqcspgA0T_3odnUa3414FQyI433gwCCH5t1Jvre1Iq6BZGbWG3yVCSFd8hNR7gHvCi1glnZ6zXkdk-3akNh-NmL0RwdQ_K408lsJpG9h4pRFaeMeS2dWB42Tq-WqlR2gYtVvME99MnEhGijgrK3QjnKi4QzJsXVSadpT3hmCvkfB_aFPV5et9db5EcBw-isem-Ij03_enDsIa53DYO1fZ0ZDGWixTzUM"/>
+</div>
+<h3 class="text-xl font-bold text-slate-900">GPT (OpenAI)</h3>
+<p class="text-sm text-slate-500 font-medium mt-1">GPT-4o Turbo</p>
+<div class="mt-auto pt-6 flex items-center gap-2 text-brand font-bold text-sm">
+<span class="w-2 h-2 rounded-full bg-brand animate-pulse"></span>
+                            Active Model
+                        </div>
+</div>
+<div class="absolute bottom-0 left-0 w-full h-1.5 bg-brand"></div>
+</div>
+<div class="col-span-1 bento-card shadow-bento group cursor-pointer relative overflow-hidden hover:bg-slate-50">
+<div class="absolute top-0 right-0 p-5 z-10">
+<div class="relative inline-block w-12 h-6 align-middle select-none transition duration-200 ease-in opacity-50 group-hover:opacity-100">
+<input class="toggle-checkbox absolute block w-6 h-6 rounded-full bg-white border-4 border-slate-200 appearance-none cursor-pointer transition-all duration-300 left-0 drop-shadow-sm" id="toggle2" name="toggle" type="checkbox"/>
+<label class="toggle-label block overflow-hidden h-6 rounded-full bg-slate-200 cursor-pointer" for="toggle2"></label>
+</div>
+</div>
+<div class="p-8 h-full flex flex-col">
+<div class="w-16 h-16 bg-white border-2 border-slate-100 rounded-3xl flex items-center justify-center mb-6 shadow-sm group-hover:shadow-md transition-all duration-300">
+<img alt="Gemini Logo" class="w-8 h-8" src="https://lh3.googleusercontent.com/aida-public/AB6AXuC5NmhGg3vxB5Fb_gIJZEvqHWGfiu54LWmdX-X9ietVme-acu9rNUM50md4BttB7uo1OS0yJwlN7-9fqe6hHYZ_Duz8xdlAyCAH5f2lvzJDsRFpvY7J8HBySc5bIsd0z9-zaoQSirOfQrytAHZLiC3h8WxT3aVpkqXtAWFKodm9VdD8qJyoF3c0wHQs8Z_x7zjJRRB8IRjUousCG9g1XP_LHcucqquO4uNl83b-KVSKlSGK30o9ZU6WUa7axEBnu4eai_U6OGd_YQQ"/>
+</div>
+<h3 class="text-xl font-bold text-slate-900 group-hover:text-brand transition-colors">Gemini (Google)</h3>
+<p class="text-sm text-slate-400 font-medium mt-1">Gemini 1.5 Pro</p>
+<div class="mt-auto pt-6 flex items-center gap-2 text-slate-400 font-medium text-sm group-hover:text-slate-600">
+<span class="w-2 h-2 rounded-full bg-slate-300"></span>
+                            Standby
+                        </div>
+</div>
+</div>
+<div class="col-span-1 bento-card shadow-bento bg-slate-900 text-white p-8 relative overflow-hidden flex flex-col justify-between">
+<div class="absolute top-0 right-0 w-32 h-32 bg-pop-lime opacity-20 rounded-full blur-3xl -mr-10 -mt-10"></div>
+<div class="absolute bottom-0 left-0 w-24 h-24 bg-brand opacity-40 rounded-full blur-2xl -ml-5 -mb-5"></div>
+<div class="relative z-10">
+<div class="flex items-center justify-between mb-4">
+<span class="text-slate-300 font-medium text-sm">토큰 사용량</span>
+<span class="material-icons-round text-pop-lime">data_usage</span>
+</div>
+<div class="text-4xl font-black mb-1">12,450</div>
+<div class="text-xs text-slate-400">이번 달 누적 사용량</div>
+</div>
+<div class="relative z-10 mt-6">
+<div class="w-full bg-slate-700/50 rounded-full h-2 mb-2 overflow-hidden">
+<div class="bg-gradient-to-r from-brand to-pop-lime h-2 rounded-full" style="width: 45%"></div>
+</div>
+<div class="flex justify-between text-[10px] text-slate-400 uppercase font-bold tracking-wider">
+<span>0</span>
+<span>Limit: 50k</span>
+</div>
+</div>
+</div>
+<div class="col-span-1 lg:col-span-2 bento-card shadow-bento p-8 relative group">
+<div class="flex items-center gap-4 mb-6">
+<div class="w-10 h-10 rounded-full bg-brand/10 flex items-center justify-center text-brand">
+<span class="material-icons-round">vpn_key</span>
+</div>
+<h3 class="text-lg font-bold text-slate-800">OpenAI API Access</h3>
+<span class="ml-auto bg-green-100 text-green-700 text-xs font-bold px-3 py-1 rounded-full flex items-center gap-1">
+<span class="w-1.5 h-1.5 rounded-full bg-green-500"></span>
+                            Connected
+                        </span>
+</div>
+<div class="flex gap-4 items-center">
+<div class="flex-1 relative">
+<input class="w-full bg-slate-50 border border-slate-200 rounded-2xl px-5 py-4 text-slate-700 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-brand/20 focus:border-brand transition-all font-mono text-sm" placeholder="sk-..." type="password" value="sk-xxxxxxxxxxxxxxxxxxxx"/>
+<button class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-brand transition-colors">
+<span class="material-icons-round text-lg">visibility_off</span>
+</button>
+</div>
+<button class="bg-slate-900 hover:bg-slate-800 text-white px-6 py-4 font-bold rounded-2xl transition-all shadow-lg shadow-slate-200 hover:shadow-xl hover:-translate-y-0.5 active:translate-y-0 flex items-center gap-2 whitespace-nowrap">
+<span>저장</span>
+<span class="material-icons-round text-sm">save</span>
+</button>
+</div>
+<div class="mt-4 flex justify-between items-center text-xs">
+<p class="text-slate-500">
+                            키는 브라우저 로컬 스토리지에 안전하게 저장됩니다.
+                        </p>
+<a class="text-brand font-semibold hover:underline" href="#">대시보드 바로가기</a>
+</div>
+</div>
+<div class="col-span-1 bento-card shadow-bento p-8 relative group">
+<div class="flex items-center gap-4 mb-6">
+<div class="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center text-slate-500">
+<span class="material-icons-round">vpn_key</span>
+</div>
+<h3 class="text-lg font-bold text-slate-800">Gemini API</h3>
+</div>
+<div class="bg-slate-50 border border-slate-100 rounded-2xl p-4 flex flex-col gap-3">
+<div class="flex items-center gap-3">
+<div class="w-8 h-8 rounded-full bg-white border border-slate-200 flex items-center justify-center shadow-sm">
+<span class="material-icons-round text-slate-300 text-sm">link_off</span>
+</div>
+<div>
+<span class="text-xs font-bold text-slate-400 block uppercase tracking-wider">Status</span>
+<span class="text-sm font-semibold text-slate-500">연결되지 않음</span>
+</div>
+</div>
+<button class="w-full mt-1 bg-white border border-slate-200 hover:border-brand hover:text-brand text-slate-600 py-2.5 rounded-xl text-sm font-bold transition-all shadow-sm">
+                            키 입력하기
+                        </button>
+</div>
+<p class="mt-4 text-xs text-slate-400 text-center">
+                        Google AI Studio에서 발급 가능
+                    </p>
+</div>
+</div>
+</div>
+</main>
+
+</body></html>

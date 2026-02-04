@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>PromptBlocks - Vibrant Bento Library</title>
+<link href="https://fonts.googleapis.com/icon?family=Material+Icons+Outlined" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,typography"></script>
+<script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ["Outfit", "sans-serif"],
+                    },
+                    colors: {
+                        'bento-bg': '#FAFAFA',
+                        'bento-purple': '#E0CFFC',
+                        'bento-mint': '#C1F0DC',
+                        'bento-yellow': '#FDF4A5',
+                        'bento-pink': '#FFC8DD',
+                        'bento-blue': '#BDE0FE',
+                        'bento-orange': '#FFD6A5',
+                        'dark-ink': '#18181B',
+                    },
+                    boxShadow: {
+                        'bento': '0 4px 6px -1px rgba(0, 0, 0, 0.02), 0 2px 4px -1px rgba(0, 0, 0, 0.02)',
+                        'bento-hover': '0 20px 25px -5px rgba(0, 0, 0, 0.05), 0 10px 10px -5px rgba(0, 0, 0, 0.01)',
+                        'hard': '4px 4px 0px 0px rgba(24, 24, 27, 1)',
+                    }
+                },
+            },
+        };
+    </script>
+<style>
+        body {
+            font-family: 'Outfit', sans-serif;
+            background-color: #FAFAFA;
+            color: #18181B;
+        }
+        .grid-pattern {
+            background-size: 40px 40px;
+            background-image: 
+                linear-gradient(to right, rgba(0, 0, 0, 0.05) 1px, transparent 1px),
+                linear-gradient(to bottom, rgba(0, 0, 0, 0.05) 1px, transparent 1px);
+            mask-image: linear-gradient(to bottom, black 60%, transparent 100%);
+        }
+        .sidebar-item-active {
+            background-color: #18181B;
+            color: white;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: rgba(0, 0, 0, 0.1);
+            border-radius: 10px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(0, 0, 0, 0.2);
+        }
+        .bento-card {
+            transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+        }
+        .bento-card:hover {
+            transform: translateY(-4px) scale(1.01);
+            box-shadow: 0 20px 40px -15px rgba(0,0,0,0.1);
+        }
+    </style>
+</head>
+<body class="min-h-screen antialiased overflow-hidden bg-bento-bg text-dark-ink">
+<div class="fixed inset-0 grid-pattern z-0 pointer-events-none"></div>
+<div class="flex h-screen overflow-hidden relative z-10">
+<aside class="w-72 bg-white border-r-2 border-gray-100 flex flex-col z-20 shadow-sm">
+<div class="p-8 flex items-center justify-between">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded-xl bg-black flex items-center justify-center shadow-lg transform rotate-3">
+<span class="material-icons-outlined text-white text-xl">grid_view</span>
+</div>
+<span class="font-bold text-2xl tracking-tight text-dark-ink">PromptBlocks</span>
+</div>
+</div>
+<nav class="flex-1 px-4 space-y-2 mt-2">
+<div class="px-4 py-2 text-xs font-bold text-gray-400 uppercase tracking-wider">Menu</div>
+<a class="flex items-center gap-3 px-4 py-3.5 text-sm font-semibold rounded-2xl text-gray-500 hover:bg-gray-50 hover:text-dark-ink transition-all duration-200" href="#">
+<span class="material-icons-outlined">image_search</span>
+                    Prompt Decomposition
+                </a>
+<a class="sidebar-item-active flex items-center gap-3 px-4 py-3.5 text-sm font-semibold rounded-2xl transition-all duration-200" href="#">
+<span class="material-icons-outlined">view_agenda</span>
+                    Block Library
+                </a>
+<a class="flex items-center gap-3 px-4 py-3.5 text-sm font-semibold rounded-2xl text-gray-500 hover:bg-gray-50 hover:text-dark-ink transition-all duration-200" href="#">
+<span class="material-icons-outlined">extension</span>
+                    Block Assembly
+                </a>
+<a class="flex items-center gap-3 px-4 py-3.5 text-sm font-semibold rounded-2xl text-gray-500 hover:bg-gray-50 hover:text-dark-ink transition-all duration-200" href="#">
+<span class="material-icons-outlined">settings</span>
+                    Settings
+                </a>
+</nav>
+<div class="p-6 border-t border-gray-100">
+<button class="flex items-center gap-3 px-4 py-3 w-full text-sm font-semibold rounded-2xl text-gray-500 hover:bg-red-50 hover:text-red-500 transition-all">
+<span class="material-icons-outlined">logout</span>
+                    Logout
+                </button>
+</div>
+</aside>
+<main class="flex-1 flex flex-col overflow-auto relative bg-transparent">
+<header class="h-24 px-8 flex items-center justify-between sticky top-0 z-30 bg-white/80 backdrop-blur-md border-b border-gray-100">
+<div class="flex items-center gap-4">
+<h1 class="text-3xl font-extrabold text-dark-ink tracking-tight">Library</h1>
+<span class="px-3 py-1 rounded-full text-xs font-bold bg-black text-white">BETA 2.0</span>
+</div>
+<div class="flex items-center gap-4">
+<button class="w-12 h-12 rounded-full border border-gray-200 bg-white flex items-center justify-center text-gray-500 hover:text-black hover:border-black hover:shadow-md transition-all relative">
+<span class="material-icons-outlined">notifications</span>
+<span class="absolute top-3 right-3 w-2.5 h-2.5 bg-red-500 rounded-full border-2 border-white"></span>
+</button>
+<div class="flex items-center gap-3 pl-4 border-l-2 border-gray-100">
+<div class="flex flex-col items-end">
+<span class="text-sm font-bold text-dark-ink">Meta Artist</span>
+<span class="text-xs text-gray-400 font-medium">Pro Plan</span>
+</div>
+<div class="w-12 h-12 rounded-full bg-bento-mint p-1 border-2 border-white shadow-sm overflow-hidden">
+<img alt="User" class="w-full h-full rounded-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAGN99_XowA4NCnlslQk3dPV1esar1_RhYQP2B3X9JXit-tzG0-pnriUQoAJ7VDE443FBUQ-bMCJX1fUrtbOLBqwUkJOxDkTUqlB0mRKoGB7SRhoY5rGTdkQLt5wyK8gFFe0eagCwL1czaWyUsd3PbdRRx0Rrvg_ITkTpWcWlOM2OkbM7dQyTUpW_dRxUO-1WrZS7eWVORsjp8UdSCfKSIBA-FNzv_wdsMc-Sed-yhazp_9e_99YTXiLL_BLvx5IDBwFab1w0y3TMs"/>
+</div>
+</div>
+</div>
+</header>
+<div class="p-8 max-w-[1600px] mx-auto w-full space-y-8 pb-20">
+<div class="flex flex-col md:flex-row gap-5 items-center justify-between">
+<div class="relative flex-1 w-full max-w-2xl group">
+<span class="material-icons-outlined absolute left-5 top-1/2 -translate-y-1/2 text-dark-ink text-2xl group-focus-within:scale-110 transition-transform">search</span>
+<input class="w-full pl-14 pr-24 py-4 bg-white border-2 border-dark-ink rounded-2xl focus:ring-0 focus:border-dark-ink focus:shadow-hard text-dark-ink placeholder-gray-400 font-medium text-lg transition-all outline-none" placeholder="Search for style blocks..." type="text"/>
+<div class="absolute right-4 top-1/2 -translate-y-1/2 px-3 py-1 bg-gray-100 rounded-lg text-xs font-bold text-gray-500 border border-gray-200">⌘K</div>
+</div>
+<div class="flex items-center gap-3">
+<button class="px-6 py-3 bg-white border-2 border-gray-100 hover:border-dark-ink rounded-xl font-bold text-sm text-dark-ink flex items-center gap-2 transition-all shadow-sm hover:shadow-md">
+<span class="material-icons-outlined text-gray-400">filter_list</span>
+                            Filter
+                        </button>
+<button class="px-6 py-3 bg-white border-2 border-gray-100 hover:border-dark-ink rounded-xl font-bold text-sm text-dark-ink flex items-center gap-2 transition-all shadow-sm hover:shadow-md">
+<span class="material-icons-outlined text-gray-400">sort</span>
+                            Sort
+                        </button>
+<div class="px-6 py-3 bg-dark-ink rounded-xl font-bold text-sm text-white shadow-lg shadow-gray-300">
+                            0 Blocks
+                        </div>
+</div>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-12 gap-6 auto-rows-min">
+<div class="col-span-1 md:col-span-8 md:row-span-2 bento-card rounded-[2.5rem] bg-bento-purple p-12 flex flex-col justify-between relative overflow-hidden min-h-[500px]">
+<div class="absolute top-0 right-0 w-64 h-64 bg-white/30 rounded-full blur-3xl -mr-16 -mt-16 pointer-events-none"></div>
+<div class="absolute bottom-0 left-0 w-48 h-48 bg-purple-300/30 rounded-full blur-2xl -ml-10 -mb-10 pointer-events-none"></div>
+<div class="relative z-10">
+<div class="inline-flex items-center gap-2 px-4 py-2 bg-white/60 backdrop-blur-sm rounded-full text-sm font-bold text-purple-900 mb-6">
+<span class="w-2 h-2 rounded-full bg-purple-600 animate-pulse"></span>
+                                Library Status: Empty
+                            </div>
+<h2 class="text-5xl font-black mb-6 text-dark-ink leading-tight tracking-tight">
+                                Your canvas is<br/>waiting for color.
+                            </h2>
+<p class="text-xl text-gray-700 max-w-lg font-medium leading-relaxed">
+                                No style blocks found. Upload an image to let our AI deconstruct visual elements into reusable bento blocks.
+                            </p>
+</div>
+<div class="relative z-10 mt-10">
+<button class="group inline-flex items-center justify-center px-8 py-5 bg-dark-ink text-white text-lg font-bold rounded-2xl transition-all shadow-xl hover:bg-black hover:scale-105 active:scale-95">
+<span class="material-icons-outlined mr-3 group-hover:rotate-12 transition-transform">add_photo_alternate</span>
+                                Start Image Analysis
+                            </button>
+</div>
+<div class="absolute right-10 bottom-10 opacity-80 hidden md:block">
+<div class="w-48 h-48 bg-white/40 rounded-3xl rotate-6 border-4 border-white/50 flex items-center justify-center">
+<span class="material-icons-outlined text-8xl text-purple-400">palette</span>
+</div>
+</div>
+</div>
+<div class="col-span-1 md:col-span-4 bento-card rounded-[2.5rem] bg-bento-mint p-8 relative overflow-hidden group">
+<div class="absolute top-4 right-4 w-12 h-12 bg-white/50 rounded-full flex items-center justify-center group-hover:scale-110 transition-transform">
+<span class="material-icons-outlined text-emerald-600">category</span>
+</div>
+<div class="mt-12">
+<h3 class="font-black text-2xl mb-3 text-dark-ink">Auto-Tagging</h3>
+<p class="text-sm font-medium text-emerald-800/80 leading-relaxed">
+                                Our engine identifies 13 core visual elements including lighting, texture, and composition instantly.
+                            </p>
+</div>
+<div class="mt-6 flex gap-2">
+<span class="px-2 py-1 bg-white/50 rounded-md text-xs font-bold text-emerald-800">#Lighting</span>
+<span class="px-2 py-1 bg-white/50 rounded-md text-xs font-bold text-emerald-800">#Texture</span>
+</div>
+</div>
+<div class="col-span-1 md:col-span-4 bento-card rounded-[2.5rem] bg-bento-yellow p-8 relative overflow-hidden group">
+<div class="absolute top-4 right-4 w-12 h-12 bg-white/50 rounded-full flex items-center justify-center group-hover:scale-110 transition-transform">
+<span class="material-icons-outlined text-amber-600">bolt</span>
+</div>
+<div class="mt-12">
+<h3 class="font-black text-2xl mb-3 text-dark-ink">Instant Find</h3>
+<p class="text-sm font-medium text-amber-900/70 leading-relaxed">
+                                Semantic search understands the "vibe", not just keywords. Find that specific neon noir look in milliseconds.
+                            </p>
+</div>
+<div class="mt-6 w-full h-2 bg-white/40 rounded-full overflow-hidden">
+<div class="h-full bg-amber-500 w-3/4"></div>
+</div>
+</div>
+<div class="col-span-1 md:col-span-4 bento-card rounded-[2.5rem] bg-bento-pink p-8 relative overflow-hidden group">
+<div class="absolute top-4 right-4 w-12 h-12 bg-white/50 rounded-full flex items-center justify-center group-hover:scale-110 transition-transform">
+<span class="material-icons-outlined text-pink-600">auto_awesome</span>
+</div>
+<div class="mt-12">
+<h3 class="font-black text-2xl mb-3 text-dark-ink">Remix &amp; Match</h3>
+<p class="text-sm font-medium text-pink-900/70 leading-relaxed">
+                                Treat prompts like LEGO. Snap different style blocks together to generate unique aesthetics.
+                            </p>
+</div>
+<div class="absolute -bottom-6 -right-6 w-24 h-24 bg-pink-400/20 rounded-full blur-xl"></div>
+</div>
+<div class="col-span-1 md:col-span-4 bento-card rounded-[2.5rem] bg-white border-2 border-gray-100 p-8 flex items-center justify-center relative overflow-hidden group hover:border-bento-blue transition-colors">
+<div class="text-center">
+<div class="w-16 h-16 bg-bento-blue mx-auto rounded-2xl flex items-center justify-center mb-4 text-blue-600 transform group-hover:rotate-12 transition-transform duration-300">
+<span class="material-icons-outlined text-3xl">tips_and_updates</span>
+</div>
+<h3 class="font-bold text-lg text-dark-ink">Daily Inspiration</h3>
+<p class="text-sm text-gray-400 mt-1">Check back tomorrow for fresh AI styles.</p>
+</div>
+</div>
+<div class="col-span-1 md:col-span-4 bento-card rounded-[2.5rem] bg-bento-blue p-8 relative overflow-hidden">
+<div class="flex justify-between items-start">
+<h3 class="font-black text-2xl text-dark-ink w-2/3">Community Picks</h3>
+<span class="material-icons-outlined text-blue-600 text-3xl">public</span>
+</div>
+<div class="mt-4 flex -space-x-3 overflow-hidden">
+<img alt="" class="inline-block h-10 w-10 rounded-full ring-2 ring-white" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBVkS9gXDz9X4j07G-gNLQrlwRhRsUXfrxD5SOqm0fohz2EsZhL9UrH4q1iLfkVaQFwsOHQ09uBiOPqy7TvAknJo50ZydurasMS-bIiGtDjrp99kezHrX4syCR-f9B5W4n7pc0EHNPyaRyIMn0aizLCa8n3HnihX7D3-FZJOo25-7d0BufxQnHxeu88QSIX7exSnrVqrIA8lgH5LsyDrR3dAKdNquK5vcBCvV3Lt9HyRXJS1Lf57mMJP16tBILMYhcMhkaBlgUSU5w"/>
+<img alt="" class="inline-block h-10 w-10 rounded-full ring-2 ring-white" src="https://lh3.googleusercontent.com/aida-public/AB6AXuANE9k3P-Yz7lU5Rl5INqOUecnyERLD8kvqy-Gr7ZXs5Cxut6Lu4Cf0_jOESyzT6WaWRKGRpSWpYxYVKnwMZildEZtX__CRJJIenZfnW7qxomuTh07EFK9bAIf5R1dbe4n1PpSeKfblpUDqUX4X9-TYx4qwg5bY4XkCJYyuwBJHKSBpho34rwvOINQf1ovv5UDHZ717IcrjbgYXHneKjHa73ZrWWPU3OqGIB8-7IBbhBNFm8CmPMPAaAojRu7f7IvSFIQpjcSLcnxM"/>
+<img alt="" class="inline-block h-10 w-10 rounded-full ring-2 ring-white" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDFjkA0JrYa1_Mp4j9jWswNmzDDWtL7GmpWUUl0QjyLwyvtQQaaZ-7sBDBjdyLUnJRqNEEOsFIdY3m8B6lT10_WcjihrQF7_BmW5QRa4S9xfmksTqVu_t4fSCM3GfU8GOjXGSfx-C4esGNL3e3xLpipV0epEYdT0T1mNJLB5z6qyM1UZMKLA2Mg5nEu6Hr3PBcNKfW-QzT2JlWnrFR6rrZbyT53Hh6Ox3cJ0UGJcP3m5tp2uLvqMLJYuc01tUj_e9s4yAsLPnHsVwg"/>
+<div class="h-10 w-10 rounded-full bg-white flex items-center justify-center text-xs font-bold text-blue-600 ring-2 ring-white">+5</div>
+</div>
+</div>
+</div>
+</div>
+<footer class="mt-auto py-8 text-center border-t border-gray-100 bg-white">
+<p class="text-gray-400 text-xs font-semibold uppercase tracking-widest">© 2026 PromptBlocks. Visual System.</p>
+</footer>
+</main>
+</div>
+
+</body></html>

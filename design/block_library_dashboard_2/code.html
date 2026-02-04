@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html class="dark" lang="ko"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>PromptBlocks - Futuristic Block Library</title>
+<link href="https://fonts.googleapis.com/icon?family=Material+Icons+Outlined" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,typography"></script>
+<script>
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        primary: "#3B82F6",
+                        "glass": "rgba(255, 255, 255, 0.03)",
+                        "glass-border": "rgba(255, 255, 255, 0.08)",
+                        "glass-hover": "rgba(255, 255, 255, 0.08)",
+                        "neon-blue": "#00f3ff",
+                        "neon-purple": "#bc13fe",
+                    },
+                    fontFamily: {
+                        display: ["Inter", "sans-serif"],
+                    },
+                    boxShadow: {
+                        'glow': '0 0 20px rgba(59, 130, 246, 0.25)',
+                        'glow-strong': '0 0 30px rgba(59, 130, 246, 0.4)',
+                        'inner-glow': 'inset 0 0 20px rgba(255, 255, 255, 0.05)',
+                    },
+                    backdropBlur: {
+                        'xs': '2px',
+                    },
+                    animation: {
+                        'pulse-slow': 'pulse 4s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                    }
+                },
+            },
+        };
+    </script>
+<style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #0B1120;
+            background-image: 
+                radial-gradient(at 0% 0%, rgba(59, 130, 246, 0.15) 0px, transparent 40%), 
+                radial-gradient(at 100% 0%, rgba(139, 92, 246, 0.15) 0px, transparent 40%), 
+                radial-gradient(at 100% 100%, rgba(59, 130, 246, 0.1) 0px, transparent 40%);
+            background-attachment: fixed;
+        }.pattern-grid {
+            background-size: 60px 60px;
+            background-image: 
+                linear-gradient(to right, rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+                linear-gradient(to bottom, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+            mask-image: radial-gradient(circle at center, black 40%, transparent 100%);
+            pointer-events: none;
+        }
+        .glass-panel {
+            background: rgba(15, 23, 42, 0.6);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+        .glass-card {
+            background: rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            transition: all 0.3s ease;
+        }
+        .glass-card:hover {
+            background: rgba(255, 255, 255, 0.07);
+            border-color: rgba(255, 255, 255, 0.15);
+            box-shadow: 0 0 30px rgba(59, 130, 246, 0.15);
+            transform: translateY(-2px);
+        }
+        .sidebar-item-active {
+            background: linear-gradient(90deg, rgba(59, 130, 246, 0.15) 0%, rgba(59, 130, 246, 0.05) 100%);
+            border-left: 3px solid #60A5FA;
+            color: #60A5FA;
+        }::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+    </style>
+</head>
+<body class="text-slate-300 min-h-screen antialiased selection:bg-blue-500/30 selection:text-white overflow-hidden">
+<div class="fixed inset-0 pattern-grid z-0"></div>
+<div class="flex h-screen overflow-hidden relative z-10">
+<aside class="w-72 glass-panel border-r-0 border-r-white/5 flex flex-col z-20">
+<div class="p-8 flex items-center justify-between">
+<div class="flex items-center gap-3">
+<div class="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center shadow-lg shadow-blue-500/20">
+<span class="material-icons-outlined text-white text-lg">grid_view</span>
+</div>
+<span class="font-bold text-xl tracking-tight text-white bg-clip-text text-transparent bg-gradient-to-r from-white to-slate-400">PromptBlocks</span>
+</div>
+<button class="text-slate-500 hover:text-white transition-colors">
+<span class="material-icons-outlined text-sm">chevron_left</span>
+</button>
+</div>
+<nav class="flex-1 px-4 space-y-2 mt-2">
+<div class="px-4 py-2 text-xs font-semibold text-slate-500 uppercase tracking-wider">Menu</div>
+<a class="flex items-center gap-3 px-4 py-3 text-sm font-medium rounded-r-xl text-slate-400 hover:text-white hover:bg-white/5 transition-all duration-200 border-l-2 border-transparent" href="#">
+<span class="material-icons-outlined">image_search</span>
+                프롬프트 분해
+            </a>
+<a class="sidebar-item-active flex items-center gap-3 px-4 py-3 text-sm font-medium rounded-r-xl transition-all duration-200" href="#">
+<span class="material-icons-outlined">view_agenda</span>
+                블록 라이브러리
+            </a>
+<a class="flex items-center gap-3 px-4 py-3 text-sm font-medium rounded-r-xl text-slate-400 hover:text-white hover:bg-white/5 transition-all duration-200 border-l-2 border-transparent" href="#">
+<span class="material-icons-outlined">extension</span>
+                블록 조립
+            </a>
+<a class="flex items-center gap-3 px-4 py-3 text-sm font-medium rounded-r-xl text-slate-400 hover:text-white hover:bg-white/5 transition-all duration-200 border-l-2 border-transparent" href="#">
+<span class="material-icons-outlined">settings</span>
+                설정
+            </a>
+</nav>
+<div class="p-6 border-t border-white/5 bg-gradient-to-t from-slate-900/50 to-transparent">
+<button class="flex items-center gap-3 px-4 py-3 w-full text-sm font-medium rounded-xl text-slate-400 hover:text-white hover:bg-white/5 transition-all border border-transparent hover:border-white/5">
+<span class="material-icons-outlined">logout</span>
+                로그아웃
+            </button>
+</div>
+</aside>
+<main class="flex-1 flex flex-col overflow-auto relative">
+<header class="h-20 px-8 flex items-center justify-between sticky top-0 z-10 glass-panel border-b border-white/5 bg-opacity-70">
+<div class="flex items-center gap-4">
+<h1 class="text-lg font-bold text-white tracking-wide">블록 라이브러리</h1>
+<span class="px-2 py-0.5 rounded text-[10px] bg-blue-500/20 text-blue-300 border border-blue-500/30">BETA</span>
+</div>
+<div class="flex items-center gap-6">
+<button class="relative p-2 text-slate-400 hover:text-white transition-colors">
+<span class="material-icons-outlined">notifications</span>
+<span class="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full shadow-[0_0_8px_rgba(239,68,68,0.6)]"></span>
+</button>
+<div class="h-6 w-px bg-white/10"></div>
+<div class="flex items-center gap-3">
+<div class="flex flex-col items-end">
+<span class="text-sm font-medium text-white">Meta Artist</span>
+<span class="text-xs text-slate-500">metachain.art@gmail.com</span>
+</div>
+<div class="w-10 h-10 rounded-full bg-gradient-to-br from-indigo-500 to-purple-500 p-0.5 shadow-lg shadow-indigo-500/20">
+<div class="w-full h-full rounded-full bg-slate-900 flex items-center justify-center">
+<span class="material-icons-outlined text-indigo-400">account_circle</span>
+</div>
+</div>
+</div>
+</div>
+</header>
+<div class="p-8 max-w-7xl mx-auto w-full space-y-8">
+<div class="relative z-0">
+<div class="absolute inset-0 bg-blue-500/5 blur-3xl -z-10 rounded-full"></div>
+<div class="flex flex-col md:flex-row gap-5 items-center justify-between">
+<div class="relative flex-1 w-full max-w-2xl group">
+<span class="material-icons-outlined absolute left-5 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-blue-400 transition-colors">search</span>
+<input class="w-full pl-14 pr-6 py-4 bg-white/5 backdrop-blur-md border border-white/10 rounded-full focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500/50 text-white placeholder-slate-500 transition-all outline-none shadow-lg shadow-black/10 caret-blue-400" placeholder="AI 프롬프트 블록 검색..." type="text"/>
+<div class="absolute right-4 top-1/2 -translate-y-1/2 px-2 py-1 bg-white/5 rounded text-xs text-slate-500 border border-white/5">⌘K</div>
+</div>
+<div class="flex items-center gap-4 text-xs font-medium text-slate-400 whitespace-nowrap bg-white/5 px-4 py-2 rounded-full border border-white/5 backdrop-blur-sm">
+<span>총 <span class="text-blue-400">0</span>개 블록</span>
+<div class="w-px h-3 bg-white/10"></div>
+<button class="hover:text-white transition-colors">필터</button>
+<div class="w-px h-3 bg-white/10"></div>
+<button class="hover:text-white transition-colors">정렬</button>
+</div>
+</div>
+</div>
+<div class="glass-card rounded-2xl min-h-[450px] flex flex-col items-center justify-center p-12 text-center relative overflow-hidden group">
+<div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-64 h-64 bg-blue-500/10 rounded-full blur-[80px] group-hover:bg-blue-500/20 transition-all duration-700"></div>
+<div class="relative z-10">
+<div class="w-24 h-24 bg-gradient-to-br from-white/10 to-transparent rounded-2xl border border-white/10 flex items-center justify-center mb-8 mx-auto shadow-[0_0_30px_rgba(0,0,0,0.2)] group-hover:scale-110 transition-transform duration-500">
+<span class="material-icons-outlined text-blue-400 text-6xl drop-shadow-[0_0_10px_rgba(96,165,250,0.5)]">inventory_2</span>
+</div>
+<h2 class="text-2xl font-bold mb-3 text-white">저장된 블록이 없습니다</h2>
+<p class="text-slate-400 mb-10 max-w-md mx-auto leading-relaxed">
+                        아직 분석된 프롬프트 데이터가 없습니다.<br/>
+                        이미지를 업로드하여 AI가 분석한 스타일 블록을 수집해보세요.
+                    </p>
+<a class="inline-flex items-center justify-center px-8 py-4 bg-blue-600 hover:bg-blue-500 text-white font-semibold rounded-full transition-all shadow-[0_0_20px_rgba(37,99,235,0.4)] hover:shadow-[0_0_30px_rgba(37,99,235,0.6)] active:scale-95 group/btn" href="#">
+<span class="material-icons-outlined mr-2 group-hover/btn:rotate-12 transition-transform">auto_awesome</span>
+                        이미지 분석 시작하기
+                    </a>
+</div>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+<div class="glass-card p-6 rounded-2xl relative overflow-hidden group">
+<div class="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
+<span class="material-icons-outlined text-6xl text-blue-400">category</span>
+</div>
+<div class="w-12 h-12 bg-blue-500/20 text-blue-400 rounded-xl flex items-center justify-center mb-4 border border-blue-500/30 shadow-[0_0_15px_rgba(59,130,246,0.3)]">
+<span class="material-icons-outlined">category</span>
+</div>
+<h3 class="font-bold text-lg mb-2 text-white group-hover:text-blue-300 transition-colors">자동 분류 시스템</h3>
+<p class="text-sm text-slate-400 leading-relaxed">배경, 화풍, 조명 등 13가지 핵심 요소로 프롬프트를 자동으로 태깅하고 분류합니다.</p>
+</div>
+<div class="glass-card p-6 rounded-2xl relative overflow-hidden group">
+<div class="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
+<span class="material-icons-outlined text-6xl text-emerald-400">bolt</span>
+</div>
+<div class="w-12 h-12 bg-emerald-500/20 text-emerald-400 rounded-xl flex items-center justify-center mb-4 border border-emerald-500/30 shadow-[0_0_15px_rgba(16,185,129,0.3)]">
+<span class="material-icons-outlined">bolt</span>
+</div>
+<h3 class="font-bold text-lg mb-2 text-white group-hover:text-emerald-300 transition-colors">초고속 검색</h3>
+<p class="text-sm text-slate-400 leading-relaxed">수백 개의 프롬프트 블록 중에서 시맨틱 검색을 통해 원하는 뉘앙스를 즉시 찾아냅니다.</p>
+</div>
+<div class="glass-card p-6 rounded-2xl relative overflow-hidden group">
+<div class="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
+<span class="material-icons-outlined text-6xl text-purple-400">auto_awesome</span>
+</div>
+<div class="w-12 h-12 bg-purple-500/20 text-purple-400 rounded-xl flex items-center justify-center mb-4 border border-purple-500/30 shadow-[0_0_15px_rgba(168,85,247,0.3)]">
+<span class="material-icons-outlined">auto_awesome</span>
+</div>
+<h3 class="font-bold text-lg mb-2 text-white group-hover:text-purple-300 transition-colors">무한한 조합</h3>
+<p class="text-sm text-slate-400 leading-relaxed">저장된 블록들을 레고처럼 조립하여 세상에 없던 독창적인 프롬프트를 설계하세요.</p>
+</div>
+</div>
+</div>
+<footer class="mt-auto py-8 text-center border-t border-white/5 bg-slate-900/30">
+<p class="text-slate-600 text-xs">© 2026 PromptBlocks. Intelligent Design System.</p>
+</footer>
+</main>
+</div>
+
+</body></html>
