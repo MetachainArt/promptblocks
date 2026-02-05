@@ -10,6 +10,7 @@ function toCamelCase(block: Record<string, unknown>): Block {
     id: block.id as string,
     userId: block.user_id as string,
     promptId: block.prompt_id as string | null,
+    collectionId: (block.collection_id as string) || null,
     blockType: block.block_type as BlockType,
     content: block.content as string,
     tags: (block.tags as string[]) || [],
@@ -25,6 +26,7 @@ function toSnakeCase(block: Partial<Block>): Record<string, unknown> {
   const result: Record<string, unknown> = {};
   if (block.userId !== undefined) result.user_id = block.userId;
   if (block.promptId !== undefined) result.prompt_id = block.promptId;
+  if (block.collectionId !== undefined) result.collection_id = block.collectionId;
   if (block.blockType !== undefined) result.block_type = block.blockType;
   if (block.content !== undefined) result.content = block.content;
   if (block.tags !== undefined) result.tags = block.tags;
@@ -46,18 +48,27 @@ function getLocalBlocks(): Block[] {
   }
 }
 
-function saveLocalBlock(blockType: BlockType, content: string, promptId?: string): Block {
+function saveLocalBlock(blockType: BlockType, content: string, promptId?: string, collectionId?: string): Block {
   const blocks = getLocalBlocks();
 
   const existing = blocks.find(
     (b) => b.blockType === blockType && b.content === content
   );
-  if (existing) return existing;
+  if (existing) {
+    // 기존 블록이 미분류이고 새 collectionId가 있으면 업데이트
+    if (collectionId && !existing.collectionId) {
+      existing.collectionId = collectionId;
+      existing.updatedAt = new Date().toISOString();
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(blocks));
+    }
+    return existing;
+  }
 
   const newBlock: Block = {
     id: crypto.randomUUID(),
     userId: 'local-user',
     promptId: promptId || null,
+    collectionId: collectionId || null,
     blockType,
     content,
     tags: [],
@@ -140,13 +151,14 @@ export async function getBlocks(): Promise<Block[]> {
 export async function saveBlock(
   blockType: BlockType,
   content: string,
-  promptId?: string
+  promptId?: string,
+  collectionId?: string
 ): Promise<Block> {
   const userId = await getCurrentUserId();
 
   // 비로그인: localStorage 사용
   if (!userId) {
-    return saveLocalBlock(blockType, content, promptId);
+    return saveLocalBlock(blockType, content, promptId, collectionId);
   }
 
   const supabase = createClient();
@@ -161,6 +173,16 @@ export async function saveBlock(
     .single();
 
   if (existing) {
+    // 기존 블록이 미분류이고 새 collectionId가 있으면 업데이트
+    if (collectionId && !existing.collection_id) {
+      const { data: updated } = await supabase
+        .from('blocks')
+        .update({ collection_id: collectionId })
+        .eq('id', existing.id)
+        .select()
+        .single();
+      if (updated) return toCamelCase(updated);
+    }
     return toCamelCase(existing);
   }
 
@@ -170,6 +192,7 @@ export async function saveBlock(
     .insert({
       user_id: userId,
       prompt_id: promptId || null,
+      collection_id: collectionId || null,
       block_type: blockType,
       content,
       tags: [],
@@ -181,7 +204,7 @@ export async function saveBlock(
 
   if (error) {
     console.error('블록 저장 실패:', error);
-    return saveLocalBlock(blockType, content, promptId);
+    return saveLocalBlock(blockType, content, promptId, collectionId);
   }
 
   return toCamelCase(data);
@@ -190,12 +213,13 @@ export async function saveBlock(
 // 여러 블록 한번에 저장
 export async function saveBlocks(
   items: Array<{ blockType: BlockType; content: string }>,
-  promptId?: string
+  promptId?: string,
+  collectionId?: string
 ): Promise<Block[]> {
   const savedBlocks: Block[] = [];
   for (const item of items) {
     if (item.content.trim()) {
-      const block = await saveBlock(item.blockType, item.content, promptId);
+      const block = await saveBlock(item.blockType, item.content, promptId, collectionId);
       savedBlocks.push(block);
     }
   }
@@ -285,6 +309,64 @@ export async function updateBlock(
   }
 
   return toCamelCase(data);
+}
+
+// 특정 컬렉션의 블록 가져오기 (null = 미분류)
+export async function getBlocksByCollection(collectionId: string | null): Promise<Block[]> {
+  const userId = await getCurrentUserId();
+
+  if (!userId) {
+    return getLocalBlocks().filter((b) => (b.collectionId || null) === collectionId);
+  }
+
+  const supabase = createClient();
+  let query = supabase.from('blocks').select('*').eq('user_id', userId);
+
+  if (collectionId === null) {
+    query = query.is('collection_id', null);
+  } else {
+    query = query.eq('collection_id', collectionId);
+  }
+
+  const { data, error } = await query.order('created_at', { ascending: false });
+
+  if (error) {
+    console.error('컬렉션 블록 로드 실패:', error);
+    return [];
+  }
+
+  return (data || []).map(toCamelCase);
+}
+
+// 블록을 다른 컬렉션으로 일괄 이동
+export async function moveBlocksToCollection(
+  blockIds: string[],
+  collectionId: string | null
+): Promise<void> {
+  const userId = await getCurrentUserId();
+
+  if (!userId) {
+    const blocks = getLocalBlocks();
+    for (const block of blocks) {
+      if (blockIds.includes(block.id)) {
+        block.collectionId = collectionId;
+        block.updatedAt = new Date().toISOString();
+      }
+    }
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(blocks));
+    return;
+  }
+
+  const supabase = createClient();
+  const { error } = await supabase
+    .from('blocks')
+    .update({ collection_id: collectionId })
+    .in('id', blockIds)
+    .eq('user_id', userId);
+
+  if (error) {
+    console.error('블록 이동 실패:', error);
+  }
 }
 
 // 블록 타입별 개수 가져오기

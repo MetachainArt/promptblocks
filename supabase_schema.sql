@@ -74,7 +74,24 @@ CREATE TABLE preset_blocks (
     order_index INT NOT NULL
 );
 
+-- Collections table
+CREATE TABLE collections (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    user_id UUID REFERENCES users(id) ON DELETE CASCADE,
+    name VARCHAR(100) NOT NULL,
+    description TEXT,
+    emoji VARCHAR(10),
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- Add collection_id to blocks (nullable, null = 미분류)
+ALTER TABLE blocks ADD COLUMN collection_id UUID REFERENCES collections(id) ON DELETE SET NULL;
+
 -- Create indexes
+CREATE INDEX idx_collections_user ON collections(user_id);
+CREATE INDEX idx_blocks_collection ON blocks(collection_id);
+CREATE INDEX idx_blocks_user_collection ON blocks(user_id, collection_id);
 CREATE INDEX idx_blocks_user_type ON blocks(user_id, block_type);
 CREATE INDEX idx_blocks_user_created ON blocks(user_id, created_at DESC);
 CREATE INDEX idx_blocks_user_favorite ON blocks(user_id, is_favorite);
@@ -89,6 +106,7 @@ ALTER TABLE prompts ENABLE ROW LEVEL SECURITY;
 ALTER TABLE blocks ENABLE ROW LEVEL SECURITY;
 ALTER TABLE presets ENABLE ROW LEVEL SECURITY;
 ALTER TABLE preset_blocks ENABLE ROW LEVEL SECURITY;
+ALTER TABLE collections ENABLE ROW LEVEL SECURITY;
 
 -- RLS Policies
 -- USERS
@@ -122,6 +140,11 @@ USING (auth.uid() = user_id);
 -- PRESETS
 CREATE POLICY "Users can CRUD own presets"
 ON presets FOR ALL
+USING (auth.uid() = user_id);
+
+-- COLLECTIONS
+CREATE POLICY "Users can CRUD own collections"
+ON collections FOR ALL
 USING (auth.uid() = user_id);
 
 -- PRESET_BLOCKS

@@ -109,11 +109,24 @@ export interface Block {
   id: string;
   userId: string;
   promptId: string | null;
+  collectionId: string | null;
   blockType: BlockType;
   content: string;
   tags: string[];
   isFavorite: boolean;
   isPublic: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+// 컬렉션
+export interface Collection {
+  id: string;
+  userId: string;
+  name: string;
+  description: string | null;
+  emoji: string | null;
+  blockCount?: number;
   createdAt: string;
   updatedAt: string;
 }

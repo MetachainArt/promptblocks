@@ -1,12 +1,13 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
-import { Plus, Copy, Save, Trash2, Search, X, Shuffle, GripVertical, Clock, Check } from 'lucide-react';
+import { useState, useEffect, useRef, useMemo } from 'react';
+import { Plus, Copy, Save, Trash2, Search, X, Shuffle, GripVertical, Clock, Check, Palette, Lock, Unlock } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button, Card, CardContent, Textarea, Modal, Input } from '@/components/ui';
 import { TemplateSelector } from '@/components/blocks/TemplateSelector';
-import { BLOCK_TYPES, BLOCK_TYPE_LABELS, type BlockType, type Block, type Preset } from '@/types';
+import { BLOCK_TYPES, BLOCK_TYPE_LABELS, type BlockType, type Block, type Preset, type Collection } from '@/types';
 import { getBlocks } from '@/lib/blocks';
+import { getCollections } from '@/lib/collections';
 import { getPresets, savePresetWithBlocks, deletePreset as deletePresetApi, getLocalPresetBlocks } from '@/lib/presets';
 import { type Template } from '@/lib/templates';
 import {
@@ -16,6 +17,13 @@ import {
   clearPromptHistory,
   type PromptHistoryItem,
 } from '@/lib/promptHistory';
+import {
+  type Artist,
+  type ArtistCategory,
+  ARTIST_CATEGORY_LABELS,
+  ARTIST_CATEGORY_ICONS,
+  getRecommendedArtists,
+} from '@/lib/artists';
 import {
   DndContext,
   closestCenter,
@@ -47,21 +55,25 @@ function SortableBlockItem({
   index,
   editingBlockId,
   editingContent,
+  isLocked,
   onRemove,
   onEditStart,
   onEditChange,
   onEditSave,
   onEditCancel,
+  onToggleLock,
 }: {
   block: AssembleBlock;
   index: number;
   editingBlockId: string | null;
   editingContent: string;
+  isLocked: boolean;
   onRemove: (id: string) => void;
   onEditStart: (block: AssembleBlock) => void;
   onEditChange: (value: string) => void;
   onEditSave: () => void;
   onEditCancel: () => void;
+  onToggleLock: (id: string) => void;
 }) {
   const {
     attributes,
@@ -92,7 +104,7 @@ function SortableBlockItem({
     <div
       ref={setNodeRef}
       style={style}
-      className="group flex items-start gap-2 rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] p-3"
+      className={`group flex items-start gap-2 rounded-lg border p-3 ${isLocked ? 'border-[var(--color-primary)] bg-[var(--color-primary)]/5' : 'border-[var(--color-border)] bg-[var(--color-surface)]'}`}
     >
       {/* 드래그 핸들 */}
       <div className="flex flex-col items-center gap-1 pt-1">
@@ -134,13 +146,26 @@ function SortableBlockItem({
         )}
       </div>
 
-      {/* 삭제 버튼 */}
-      <button
-        onClick={() => onRemove(block.id)}
-        className="rounded p-1 text-[var(--color-text-secondary)] opacity-0 group-hover:opacity-100 hover:bg-[var(--color-error)]/10 hover:text-[var(--color-error)] transition-opacity"
-      >
-        <X className="h-4 w-4" />
-      </button>
+      {/* 잠금 + 삭제 버튼 */}
+      <div className="flex flex-col items-center gap-1 shrink-0">
+        <button
+          onClick={() => onToggleLock(block.id)}
+          className={
+            isLocked
+              ? 'rounded p-1 text-[var(--color-primary)]'
+              : 'rounded p-1 text-[var(--color-text-secondary)] opacity-0 group-hover:opacity-100 hover:text-[var(--color-primary)] transition-opacity'
+          }
+          title={isLocked ? '잠금 해제' : '고정 (무작위 시 유지)'}
+        >
+          {isLocked ? <Lock className="h-4 w-4" /> : <Unlock className="h-4 w-4" />}
+        </button>
+        <button
+          onClick={() => onRemove(block.id)}
+          className="rounded p-1 text-[var(--color-text-secondary)] opacity-0 group-hover:opacity-100 hover:bg-[var(--color-error)]/10 hover:text-[var(--color-error)] transition-opacity"
+        >
+          <X className="h-4 w-4" />
+        </button>
+      </div>
     </div>
   );
 }
@@ -165,6 +190,11 @@ export default function AssemblePage() {
   const [editingBlockId, setEditingBlockId] = useState<string | null>(null);
   const [editingContent, setEditingContent] = useState('');
   const [promptHistory, setPromptHistory] = useState<PromptHistoryItem[]>([]);
+  const [selectedArtists, setSelectedArtists] = useState<Artist[]>([]);
+  const [artistCategory, setArtistCategory] = useState<ArtistCategory | 'all'>('all');
+  const [collections, setCollections] = useState<Collection[]>([]);
+  const [randomScopeCollectionId, setRandomScopeCollectionId] = useState<string>('all');
+  const [lockedBlockIds, setLockedBlockIds] = useState<Set<string>>(new Set());
 
   // dnd-kit 센서
   const sensors = useSensors(
@@ -177,12 +207,14 @@ export default function AssemblePage() {
     async function loadData() {
       setIsLoading(true);
       try {
-        const [blocksData, presetsData] = await Promise.all([
+        const [blocksData, presetsData, collectionsData] = await Promise.all([
           getBlocks(),
           getPresets(),
+          getCollections(),
         ]);
         setLibraryBlocks(blocksData);
         setPresets(presetsData);
+        setCollections(collectionsData);
         setPromptHistory(getPromptHistory());
       } catch (error) {
         console.error('데이터 로드 실패:', error);
@@ -194,7 +226,24 @@ export default function AssemblePage() {
     loadData();
   }, []);
 
-  const generatedPrompt = assembleBlocks.map((b) => b.content).join(', ');
+  const basePrompt = assembleBlocks.map((b) => b.content).join(', ');
+  const artistSuffix = selectedArtists.map((a) => a.promptFormat).join(', ');
+  const generatedPrompt = artistSuffix ? `${basePrompt}, ${artistSuffix}` : basePrompt;
+
+  // 작가 추천 (블록 내용 기반)
+  const recommendedArtists = useMemo(() => {
+    const contents = assembleBlocks.map((b) => b.content);
+    const excludeNames = selectedArtists.map((a) => a.name);
+    return getRecommendedArtists(contents, artistCategory, excludeNames);
+  }, [assembleBlocks, artistCategory, selectedArtists]);
+
+  const handleAddArtist = (artist: Artist) => {
+    setSelectedArtists((prev) => [...prev, artist]);
+  };
+
+  const handleRemoveArtist = (name: string) => {
+    setSelectedArtists((prev) => prev.filter((a) => a.name !== name));
+  };
 
   const filteredLibraryBlocks = libraryBlocks.filter((block) => {
     const matchesSearch = block.content.toLowerCase().includes(searchQuery.toLowerCase());
@@ -217,6 +266,12 @@ export default function AssemblePage() {
 
   const handleRemoveBlock = (id: string) => {
     setAssembleBlocks((prev) => prev.filter((b) => b.id !== id));
+    setLockedBlockIds((prev) => {
+      if (!prev.has(id)) return prev;
+      const next = new Set(prev);
+      next.delete(id);
+      return next;
+    });
   };
 
   // 드래그 앤 드롭 핸들러
@@ -337,23 +392,48 @@ export default function AssemblePage() {
   const handleClearAll = () => {
     setAssembleBlocks([]);
     setActiveTemplate(null);
+    setLockedBlockIds(new Set());
     toast.success('모든 블록이 제거되었습니다.');
   };
 
+  const handleToggleLock = (id: string) => {
+    setLockedBlockIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
+
   const handleRandomTemplate = () => {
-    if (libraryBlocks.length === 0) {
-      toast.error('라이브러리에 저장된 블록이 없습니다. 먼저 이미지를 분석해주세요.');
+    // 컬렉션 범위에 따라 블록 필터링
+    let scopeBlocks = libraryBlocks;
+    if (randomScopeCollectionId === '__uncategorized__') {
+      scopeBlocks = libraryBlocks.filter((b) => !b.collectionId);
+    } else if (randomScopeCollectionId !== 'all') {
+      scopeBlocks = libraryBlocks.filter((b) => b.collectionId === randomScopeCollectionId);
+    }
+
+    if (scopeBlocks.length === 0) {
+      toast.error(randomScopeCollectionId === 'all'
+        ? '라이브러리에 저장된 블록이 없습니다. 먼저 이미지를 분석해주세요.'
+        : '선택한 컬렉션에 블록이 없습니다.');
       return;
     }
 
+    // 잠긴 블록 보존, 잠긴 블록의 타입은 무작위 대상에서 제외
+    const locked = assembleBlocks.filter((b) => lockedBlockIds.has(b.id));
+    const lockedTypes = new Set(locked.map((b) => b.blockType));
+
     const blocksByType = new Map<string, Block[]>();
-    for (const block of libraryBlocks) {
+    for (const block of scopeBlocks) {
+      if (lockedTypes.has(block.blockType)) continue; // 잠긴 타입 스킵
       const list = blocksByType.get(block.blockType) || [];
       list.push(block);
       blocksByType.set(block.blockType, list);
     }
 
-    const randomBlocks: AssembleBlock[] = [];
+    const randomBlocks: AssembleBlock[] = [...locked];
     for (const [, blocks] of blocksByType) {
       const randomBlock = blocks[Math.floor(Math.random() * blocks.length)];
       randomBlocks.push({
@@ -366,7 +446,12 @@ export default function AssemblePage() {
 
     setActiveTemplate(null);
     setAssembleBlocks(randomBlocks);
-    toast.success(`${randomBlocks.length}개 타입에서 무작위 블록이 조립되었습니다!`);
+    const newCount = randomBlocks.length - locked.length;
+    if (locked.length > 0) {
+      toast.success(`${locked.length}개 고정, ${newCount}개 무작위 조립!`);
+    } else {
+      toast.success(`${randomBlocks.length}개 타입에서 무작위 블록이 조립되었습니다!`);
+    }
   };
 
   const handleSelectTemplate = (template: Template) => {
@@ -429,6 +514,19 @@ export default function AssemblePage() {
           </div>
           <div className="flex gap-2">
             <TemplateSelector onSelect={handleSelectTemplate} />
+            <select
+              value={randomScopeCollectionId}
+              onChange={(e) => setRandomScopeCollectionId(e.target.value)}
+              className="rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] px-2 py-1.5 text-xs text-[var(--color-text-primary)]"
+            >
+              <option value="all">전체 블록</option>
+              <option value="__uncategorized__">미분류</option>
+              {collections.map((col) => (
+                <option key={col.id} value={col.id}>
+                  {col.emoji || '📁'} {col.name}
+                </option>
+              ))}
+            </select>
             <Button variant="secondary" size="sm" onClick={handleRandomTemplate} className="gap-2">
               <Shuffle className="h-4 w-4" />
               무작위 조립
@@ -504,11 +602,13 @@ export default function AssemblePage() {
                     index={index}
                     editingBlockId={editingBlockId}
                     editingContent={editingContent}
+                    isLocked={lockedBlockIds.has(block.id)}
                     onRemove={handleRemoveBlock}
                     onEditStart={handleEditStart}
                     onEditChange={setEditingContent}
                     onEditSave={handleEditSave}
                     onEditCancel={handleEditCancel}
+                    onToggleLock={handleToggleLock}
                   />
                 ))}
               </div>

@@ -5,6 +5,7 @@ import { usePathname } from 'next/navigation';
 import {
   ImageIcon,
   Library,
+  FolderOpen,
   Puzzle,
   Settings,
   Menu,
@@ -22,6 +23,7 @@ interface NavItem {
 const navItems: NavItem[] = [
   { href: '/decompose', label: '프롬프트 분해', icon: ImageIcon },
   { href: '/library', label: '블록 라이브러리', icon: Library },
+  { href: '/collections', label: '컬렉션', icon: FolderOpen },
   { href: '/assemble', label: '블록 조립', icon: Puzzle },
   { href: '/settings', label: '설정', icon: Settings },
 ];

@@ -1,13 +1,14 @@
 'use client';
 
-import { useState, useRef } from 'react';
-import { Sparkles, AlertCircle, Upload, X, Zap, Save, Brain, RefreshCw } from 'lucide-react';
+import { useState, useRef, useEffect } from 'react';
+import { Sparkles, AlertCircle, Upload, X, Zap, Save, Brain, RefreshCw, FolderOpen, Plus } from 'lucide-react';
 import { toast } from 'sonner';
 import { Modal, Button } from '@/components/ui';
 import { BlockCard } from '@/components/blocks/BlockCard';
-import { BLOCK_TYPES, type BlockType, type DecomposeResult } from '@/types';
+import { BLOCK_TYPES, type BlockType, type DecomposeResult, type Collection } from '@/types';
 import { saveBlocks } from '@/lib/blocks';
 import { getApiKey } from '@/lib/userSettings';
+import { getCollections, createCollection } from '@/lib/collections';
 
 const AI_MODELS = {
   gpt: [
@@ -35,6 +36,50 @@ export default function DecomposePage() {
   const [showApiKeyModal, setShowApiKeyModal] = useState(false);
   const [analysisError, setAnalysisError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // 컬렉션 관련 state
+  const [collections, setCollections] = useState<Collection[]>([]);
+  const [selectedCollectionId, setSelectedCollectionId] = useState<string | null>(null);
+  const [suggestedName, setSuggestedName] = useState('');
+  const [newCollectionName, setNewCollectionName] = useState('');
+
+  useEffect(() => {
+    getCollections().then(setCollections);
+  }, []);
+
+  const suggestCollectionName = (res: DecomposeResult): string => {
+    const subject = res.subject_type?.split(',')[0].trim();
+    const style = res.style?.split(',')[0].trim();
+    if (subject && style) return `${style} ${subject}`;
+    return subject || style || `Analysis ${new Date().toLocaleDateString('ko-KR')}`;
+  };
+
+  const handleCreateNewCollection = async () => {
+    const name = newCollectionName.trim();
+    if (!name) return;
+    try {
+      const col = await createCollection(name);
+      setCollections((prev) => [col, ...prev]);
+      setSelectedCollectionId(col.id);
+      setNewCollectionName('');
+      toast.success(`"${name}" 컬렉션이 생성되었습니다.`);
+    } catch {
+      toast.error('컬렉션 생성에 실패했습니다.');
+    }
+  };
+
+  const handleUseSuggested = async () => {
+    if (!suggestedName) return;
+    try {
+      const col = await createCollection(suggestedName);
+      setCollections((prev) => [col, ...prev]);
+      setSelectedCollectionId(col.id);
+      setSuggestedName('');
+      toast.success(`"${col.name}" 컬렉션이 생성되었습니다.`);
+    } catch {
+      toast.error('컬렉션 생성에 실패했습니다.');
+    }
+  };
 
   const compressImage = (file: File): Promise<string> => {
     const MAX_DIMENSION = 2048;
@@ -150,6 +195,7 @@ export default function DecomposePage() {
       setGeneratedPrompt(data.prompt);
       setResult(data.result);
       setSelectedBlocks(new Set(BLOCK_TYPES.filter((type) => data.result[type])));
+      setSuggestedName(suggestCollectionName(data.result));
       toast.success('이미지가 분석되었습니다!');
     } catch (error) {
       const message = error instanceof Error ? error.message : '분석에 실패했습니다.';
@@ -186,7 +232,7 @@ export default function DecomposePage() {
       }));
 
     try {
-      const saved = await saveBlocks(blocksToSave);
+      const saved = await saveBlocks(blocksToSave, undefined, selectedCollectionId || undefined);
       const newCount = saved.filter((b) => blocksToSave.some((item) => item.content === b.content)).length;
 
       if (newCount > 0) {
@@ -393,6 +439,70 @@ export default function DecomposePage() {
             <Button variant="neon" onClick={handleSaveBlocks} disabled={selectedBlocks.size === 0}>
               선택한 블록 저장 ({selectedBlocks.size})
             </Button>
+          </div>
+
+          {/* 컬렉션 선택 */}
+          <div className="bento-card p-6">
+            <div className="flex items-center gap-2 mb-4">
+              <FolderOpen className="h-5 w-5 text-purple-500" />
+              <h3 className="font-bold text-gray-900">저장할 컬렉션</h3>
+            </div>
+
+            {suggestedName && (
+              <div className="mb-3 flex items-center gap-2 rounded-xl bg-purple-50 border border-purple-200 p-3">
+                <Sparkles className="h-4 w-4 text-purple-500 shrink-0" />
+                <span className="text-sm text-gray-700">추천: <strong>{suggestedName}</strong></span>
+                <button
+                  onClick={handleUseSuggested}
+                  className="ml-auto text-xs text-purple-600 font-bold hover:text-purple-800 shrink-0"
+                >
+                  사용하기
+                </button>
+              </div>
+            )}
+
+            <div className="space-y-1.5 max-h-[180px] overflow-y-auto">
+              <label className="flex items-center gap-3 p-2 rounded-lg hover:bg-gray-50 cursor-pointer transition-colors">
+                <input
+                  type="radio"
+                  name="collection"
+                  checked={selectedCollectionId === null}
+                  onChange={() => setSelectedCollectionId(null)}
+                  className="accent-purple-600"
+                />
+                <span className="text-sm text-gray-700">📁 미분류</span>
+              </label>
+              {collections.map((col) => (
+                <label key={col.id} className="flex items-center gap-3 p-2 rounded-lg hover:bg-gray-50 cursor-pointer transition-colors">
+                  <input
+                    type="radio"
+                    name="collection"
+                    checked={selectedCollectionId === col.id}
+                    onChange={() => setSelectedCollectionId(col.id)}
+                    className="accent-purple-600"
+                  />
+                  <span className="text-sm text-gray-700">{col.emoji || '📁'} {col.name}</span>
+                </label>
+              ))}
+            </div>
+
+            <div className="mt-3 flex items-center gap-2">
+              <Plus className="h-4 w-4 text-gray-400 shrink-0" />
+              <input
+                placeholder="새 컬렉션 이름..."
+                value={newCollectionName}
+                onChange={(e) => setNewCollectionName(e.target.value)}
+                onKeyDown={(e) => { if (e.key === 'Enter') handleCreateNewCollection(); }}
+                className="flex-1 text-sm border-b border-gray-200 py-1 outline-none focus:border-purple-500 bg-transparent text-gray-700 placeholder-gray-400"
+              />
+              <button
+                onClick={handleCreateNewCollection}
+                disabled={!newCollectionName.trim()}
+                className="text-xs text-purple-600 font-bold disabled:opacity-30 hover:text-purple-800 shrink-0"
+              >
+                만들기
+              </button>
+            </div>
           </div>
 
           <div className="grid gap-4 sm:grid-cols-2">
