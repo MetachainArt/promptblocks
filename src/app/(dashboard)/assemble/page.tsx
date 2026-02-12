@@ -501,18 +501,27 @@ export default function AssemblePage() {
     <div className="grid gap-6 lg:grid-cols-2">
       {/* 왼쪽: 블록 목록 */}
       <div className="space-y-4">
-        <div className="flex items-center justify-between">
-          <div>
-            <h2 className="text-lg font-semibold text-[var(--color-text-primary)]">
-              선택된 블록 ({assembleBlocks.length})
-            </h2>
-            {activeTemplate && (
-              <p className="text-sm text-[var(--color-primary)] mt-0.5">
-                {activeTemplate.icon} {activeTemplate.name} 템플릿
-              </p>
-            )}
+        {/* 헤더 영역 */}
+        <div className="space-y-3">
+          <div className="flex items-center justify-between">
+            <div>
+              <h2 className="text-lg font-semibold text-[var(--color-text-primary)] whitespace-nowrap">
+                선택된 블록 ({assembleBlocks.length})
+              </h2>
+              {activeTemplate && (
+                <p className="text-sm text-[var(--color-primary)] mt-0.5">
+                  {activeTemplate.icon} {activeTemplate.name} 템플릿
+                </p>
+              )}
+            </div>
+            <Button variant="secondary" size="sm" onClick={() => setShowLibraryModal(true)}>
+              <Plus className="h-4 w-4 mr-1" />
+              블록 추가
+            </Button>
           </div>
-          <div className="flex gap-2">
+
+          {/* 컨트롤 바 */}
+          <div className="flex flex-wrap items-center gap-2">
             <TemplateSelector onSelect={handleSelectTemplate} />
             <select
               value={randomScopeCollectionId}
@@ -527,20 +536,16 @@ export default function AssemblePage() {
                 </option>
               ))}
             </select>
-            <Button variant="secondary" size="sm" onClick={handleRandomTemplate} className="gap-2">
+            <Button variant="secondary" size="sm" onClick={handleRandomTemplate} className="gap-1">
               <Shuffle className="h-4 w-4" />
-              무작위 조립
+              무작위
             </Button>
             {assembleBlocks.length > 0 && (
               <Button variant="ghost" size="sm" onClick={handleClearAll}>
-                <Trash2 className="mr-1 h-4 w-4" />
+                <Trash2 className="h-4 w-4 mr-1" />
                 전체 삭제
               </Button>
             )}
-            <Button variant="secondary" size="sm" onClick={() => setShowLibraryModal(true)}>
-              <Plus className="mr-2 h-4 w-4" />
-              블록 추가
-            </Button>
           </div>
         </div>
 

@@ -1,6 +1,7 @@
 // 컬렉션 저장/로드 유틸리티 (Supabase + localStorage 폴백)
 import { type Collection } from '@/types';
 import { createClient } from '@/lib/supabase/client';
+import { getCurrentUserId } from '@/lib/shared';
 
 const STORAGE_KEY = 'promptblocks_collections';
 
@@ -91,12 +92,6 @@ function deleteLocalCollection(id: string): void {
 }
 
 // ============ Supabase 메인 함수들 ============
-
-async function getCurrentUserId(): Promise<string | null> {
-  const supabase = createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  return user?.id || null;
-}
 
 // 모든 컬렉션 가져오기
 export async function getCollections(): Promise<Collection[]> {

@@ -32,7 +32,7 @@ export async function updateSession(request: NextRequest) {
   } = await supabase.auth.getUser();
 
   // 보호된 경로 (로그인 필요)
-  const protectedPaths = ['/decompose', '/library', '/assemble', '/settings'];
+  const protectedPaths = ['/decompose', '/library', '/assemble', '/collections', '/settings'];
   const isProtectedPath = protectedPaths.some((path) => request.nextUrl.pathname.startsWith(path));
 
   // 인증 경로 (로그인 상태면 대시보드로 리다이렉트)

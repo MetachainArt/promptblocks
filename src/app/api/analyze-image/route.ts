@@ -1,52 +1,55 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { BLOCK_TYPES, type DecomposeResult } from '@/types';
+import { getAuthenticatedUser, unauthorizedResponse, checkRateLimit, rateLimitResponse } from '@/lib/auth';
 
-// 사용자 지침 기반 이미지 분석 시스템 프롬프트
-const IMAGE_ANALYSIS_PROMPT = `당신은 최상급 Image Prompt Rewriter (이미지 프롬프트 재작성 전문가)입니다.
+// Image analysis system prompt - outputs in English
+const IMAGE_ANALYSIS_PROMPT = `You are an expert Image Prompt Rewriter specialized in creating high-quality English prompts for AI image generation models (Midjourney, DALL·E, Stable Diffusion, etc.).
 
-주어진 이미지를 분석하여 이미지 생성 모델(Midjourney, DALL·E, Stable Diffusion 등)에 최적화된 고품질 영어 이미지 프롬프트를 작성하세요.
+Analyze the given image and create an optimized English prompt.
 
-분류 및 우선순위 (STRICT ORDER):
-1️⃣ 텍스트 중심 / 디자인: 포스터, 책 표지, UI 화면, 로고, 타이포그래피
-2️⃣ 인물 / 캐릭터: 사람 또는 캐릭터가 시각적 중심 (인종 정확히 판단)
-3️⃣ 일반 장면: 풍경, 사물, 건축, 동물, 추상 개념
+Classification Priority (STRICT ORDER):
+1️⃣ Text-focused / Design: posters, book covers, UI screens, logos, typography
+2️⃣ Character / Portrait: person or character as visual focus (accurately identify ethnicity)
+3️⃣ General Scene: landscapes, objects, architecture, animals, abstract concepts
 
-인물 이미지 필수 포함 요소:
-- 외형: 얼굴, 피부 질감, 헤어스타일, 체형, 인종
-- 의상: 소재, 핏, 레이어링, 상태
-- 포즈: 서 있음, 앉음, 걷는 중, 시선 방향
-- 표정: neutral, focused, calm, intense, joyful 등
-- 배경: 실내/실외, 배경 흐림(bokeh) 또는 선명도
-- 조명: 키라이트, 백라이트, 자연광, 네온 라이트
+Required Elements for Portrait/Character Images:
+- Appearance: face, skin texture, hairstyle, body type, ethnicity
+- Outfit: fabric, fit, layering, condition
+- Pose: standing, sitting, walking, gaze direction
+- Expression: neutral, focused, calm, intense, joyful, etc.
+- Background: indoor/outdoor, bokeh or sharp focus
+- Lighting: key light, backlight, natural light, neon
 
-기술적 디테일 포함:
-- 카메라 앵글: low-angle, high-angle, eye-level
-- 샷 타입: close-up, medium shot, wide shot
-- 렌즈: 35mm, 50mm, 85mm, shallow depth of field
-- 스타일: photorealistic, cinematic, anime 등
+Technical Details to Include:
+- Camera angle: low-angle, high-angle, eye-level
+- Shot type: close-up, medium shot, wide shot
+- Lens: 35mm, 50mm, 85mm, shallow depth of field
+- Style: photorealistic, cinematic, anime, etc.
 
-이미지를 분석하고 다음 JSON 형식으로만 응답하세요:
+IMPORTANT: ALL block values must be written in ENGLISH only. Do NOT use any other language.
+
+Respond ONLY with the following JSON format:
 
 {
-  "prompt": "여기에 생성된 영어 프롬프트 전체를 작성",
+  "prompt": "Write the complete English prompt here",
   "blocks": {
-    "subject_type": "주제 유형",
-    "style": "스타일",
-    "appearance": "인물 외형",
-    "outfit": "의상",
-    "pose_expression": "포즈와 표정",
-    "props_objects": "소품과 오브젝트",
-    "background_environment": "배경과 환경",
-    "lighting": "조명",
-    "camera_lens": "카메라와 렌즈",
-    "color_mood": "색감과 분위기",
-    "text_in_image": "이미지 내 텍스트",
-    "composition": "구도",
-    "tech_params": "기술 파라미터"
+    "subject_type": "Subject type in English",
+    "style": "Style description in English",
+    "appearance": "Appearance details in English",
+    "outfit": "Outfit description in English",
+    "pose_expression": "Pose and expression in English",
+    "props_objects": "Props and objects in English",
+    "background_environment": "Background and environment in English",
+    "lighting": "Lighting description in English",
+    "camera_lens": "Camera and lens settings in English",
+    "color_mood": "Color palette and mood in English",
+    "text_in_image": "Text found in image (keep original language if any)",
+    "composition": "Composition description in English",
+    "tech_params": "Technical parameters in English"
   }
 }
 
-해당 요소가 이미지에 없으면 빈 문자열로 작성하세요.`;
+If an element is not present in the image, use an empty string.`;
 
 async function analyzeWithGPT(imageBase64: string, apiKey: string, model: string) {
   const response = await fetch('https://api.openai.com/v1/chat/completions', {
@@ -169,6 +172,17 @@ const GPT_FALLBACKS = ['gpt-5.2', 'gpt-5-mini', 'gpt-4o'];
 
 export async function POST(request: NextRequest) {
   try {
+    // 인증 검증
+    const user = await getAuthenticatedUser();
+    if (!user) {
+      return unauthorizedResponse();
+    }
+
+    // Rate Limiting (분당 10회 - 이미지 분석은 비용이 높음)
+    if (!checkRateLimit(`analyze:${user.id}`, 10)) {
+      return rateLimitResponse();
+    }
+
     const apiKey = request.headers.get('X-API-Key');
     const aiProvider = request.headers.get('X-AI-Provider') as 'gpt' | 'gemini';
     const aiModel = request.headers.get('X-AI-Model') || (aiProvider === 'gemini' ? 'gemini-3-flash-preview' : 'gpt-5.2');

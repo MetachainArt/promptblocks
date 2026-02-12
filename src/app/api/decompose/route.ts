@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { BLOCK_TYPES, type DecomposeResult } from '@/types';
+import { getAuthenticatedUser, unauthorizedResponse, checkRateLimit, rateLimitResponse } from '@/lib/auth';
 
 const SYSTEM_PROMPT = `당신은 이미지 생성 프롬프트 분석 전문가입니다.
 주어진 프롬프트를 다음 13가지 요소로 분해하세요. 각 요소가 프롬프트에 없으면 빈 문자열로 반환하세요.
@@ -143,6 +144,17 @@ function parseResult(content: string): DecomposeResult {
 
 export async function POST(request: NextRequest) {
   try {
+    // 인증 검증
+    const user = await getAuthenticatedUser();
+    if (!user) {
+      return unauthorizedResponse();
+    }
+
+    // Rate Limiting (분당 20회)
+    if (!checkRateLimit(`decompose:${user.id}`, 20)) {
+      return rateLimitResponse();
+    }
+
     const apiKey = request.headers.get('X-API-Key');
     const aiProvider = request.headers.get('X-AI-Provider') as 'gpt' | 'gemini';
 

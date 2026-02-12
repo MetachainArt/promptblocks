@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
-import { Sparkles, AlertCircle, Upload, X, Zap, Save, Brain, RefreshCw, FolderOpen, Plus } from 'lucide-react';
+import { Sparkles, AlertCircle, Upload, X, Zap, Save, Brain, RefreshCw, FolderOpen, Plus, Type, Image as ImageIcon } from 'lucide-react';
 import { toast } from 'sonner';
 import { Modal, Button } from '@/components/ui';
 import { BlockCard } from '@/components/blocks/BlockCard';
@@ -25,6 +25,8 @@ const AI_MODELS = {
 };
 
 export default function DecomposePage() {
+  const [inputMode, setInputMode] = useState<'image' | 'text'>('image');
+  const [textPrompt, setTextPrompt] = useState('');
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [selectedAi, setSelectedAi] = useState<'gpt' | 'gemini'>('gpt');
@@ -151,8 +153,12 @@ export default function DecomposePage() {
   };
 
   const handleAnalyze = async () => {
-    if (!imageFile) {
+    if (inputMode === 'image' && !imageFile) {
       toast.error('이미지를 업로드해주세요.');
+      return;
+    }
+    if (inputMode === 'text' && !textPrompt.trim()) {
+      toast.error('프롬프트를 입력해주세요.');
       return;
     }
 
@@ -168,35 +174,55 @@ export default function DecomposePage() {
     setAnalysisError(null);
 
     try {
-      const base64 = imagePreview!;
+      let response;
 
-      const response = await fetch('/api/analyze-image', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'X-API-Key': apiKey,
-          'X-AI-Provider': selectedAi,
-          'X-AI-Model': selectedModel,
-        },
-        body: JSON.stringify({ image: base64 }),
-      });
+      if (inputMode === 'text') {
+        // 텍스트 프롬프트 분해
+        response = await fetch('/api/decompose', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-API-Key': apiKey,
+            'X-AI-Provider': selectedAi,
+          },
+          body: JSON.stringify({ prompt: textPrompt }),
+        });
+      } else {
+        // 이미지 분석
+        const base64 = imagePreview!;
+        response = await fetch('/api/analyze-image', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-API-Key': apiKey,
+            'X-AI-Provider': selectedAi,
+            'X-AI-Model': selectedModel,
+          },
+          body: JSON.stringify({ image: base64 }),
+        });
+      }
 
       let data;
       try {
         data = await response.json();
       } catch {
-        throw new Error('서버 응답을 처리할 수 없습니다. 이미지 크기를 줄여보세요.');
+        throw new Error('서버 응답을 처리할 수 없습니다.');
       }
 
       if (!response.ok) {
         throw new Error(data.error || '분석에 실패했습니다.');
       }
 
-      setGeneratedPrompt(data.prompt);
-      setResult(data.result);
+      if (inputMode === 'text') {
+        setResult(data.result);
+        setGeneratedPrompt(textPrompt);
+      } else {
+        setGeneratedPrompt(data.prompt);
+        setResult(data.result);
+      }
       setSelectedBlocks(new Set(BLOCK_TYPES.filter((type) => data.result[type])));
       setSuggestedName(suggestCollectionName(data.result));
-      toast.success('이미지가 분석되었습니다!');
+      toast.success(inputMode === 'text' ? '프롬프트가 분해되었습니다!' : '이미지가 분석되었습니다!');
     } catch (error) {
       const message = error instanceof Error ? error.message : '분석에 실패했습니다.';
       setAnalysisError(message);
@@ -254,52 +280,101 @@ export default function DecomposePage() {
           프롬프트 분해 <span className="text-purple-500">Tool</span>
         </h1>
         <p className="text-gray-500 font-medium text-lg">
-          이미지를 업로드하여 AI가 사용한 프롬프트를 13가지 요소로 정밀 분석합니다.
+          {inputMode === 'image'
+            ? '이미지를 업로드하여 AI가 사용한 프롬프트를 13가지 요소로 정밀 분석합니다.'
+            : '텍스트 프롬프트를 입력하면 13가지 요소로 분해합니다.'}
         </p>
+      </div>
+
+      {/* Mode Toggle */}
+      <div className="flex gap-2 p-1.5 bg-gray-100 rounded-2xl w-fit">
+        <button
+          onClick={() => setInputMode('image')}
+          className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-bold transition-all ${
+            inputMode === 'image'
+              ? 'bg-white text-purple-700 shadow-md'
+              : 'text-gray-500 hover:text-gray-700'
+          }`}
+        >
+          <ImageIcon className="h-4 w-4" />
+          이미지 분석
+        </button>
+        <button
+          onClick={() => setInputMode('text')}
+          className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-bold transition-all ${
+            inputMode === 'text'
+              ? 'bg-white text-purple-700 shadow-md'
+              : 'text-gray-500 hover:text-gray-700'
+          }`}
+        >
+          <Type className="h-4 w-4" />
+          텍스트 분해
+        </button>
       </div>
 
       {/* Main Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-        {/* Upload Area */}
-        <div className="lg:col-span-8 upload-area p-2 relative group">
-          {!imagePreview ? (
-            <div 
-              onClick={() => fileInputRef.current?.click()}
-              className="upload-inner h-full flex flex-col items-center justify-center p-12 relative overflow-hidden cursor-pointer min-h-[400px]"
-            >
-              {/* Animated Blobs */}
-              <div className="absolute top-10 left-10 w-20 h-20 bg-yellow-200 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob"></div>
-              <div className="absolute top-10 right-10 w-20 h-20 bg-purple-200 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob animation-delay-2000"></div>
-              <div className="absolute -bottom-8 left-20 w-20 h-20 bg-pink-200 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob animation-delay-4000"></div>
-              
-              <div className="w-24 h-24 rounded-3xl bg-white shadow-lg flex items-center justify-center mb-6 transform group-hover:-translate-y-2 transition-transform duration-300 z-10">
-                <Upload className="h-12 w-12 text-purple-500" />
-              </div>
-              <h2 className="text-2xl font-bold text-gray-900 mb-2 z-10">이미지를 끌어다 놓으세요</h2>
-              <p className="text-gray-500 font-medium z-10">또는 클릭하여 업로드 (최대 20MB)</p>
+        {/* Input Area */}
+        <div className="lg:col-span-8">
+          {inputMode === 'image' ? (
+            <div className="upload-area p-2 relative group">
+              {!imagePreview ? (
+                <div 
+                  onClick={() => fileInputRef.current?.click()}
+                  className="upload-inner h-full flex flex-col items-center justify-center p-12 relative overflow-hidden cursor-pointer min-h-[400px]"
+                >
+                  {/* Animated Blobs */}
+                  <div className="absolute top-10 left-10 w-20 h-20 bg-yellow-200 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob"></div>
+                  <div className="absolute top-10 right-10 w-20 h-20 bg-purple-200 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob animation-delay-2000"></div>
+                  <div className="absolute -bottom-8 left-20 w-20 h-20 bg-pink-200 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob animation-delay-4000"></div>
+                  
+                  <div className="w-24 h-24 rounded-3xl bg-white shadow-lg flex items-center justify-center mb-6 transform group-hover:-translate-y-2 transition-transform duration-300 z-10">
+                    <Upload className="h-12 w-12 text-purple-500" />
+                  </div>
+                  <h2 className="text-2xl font-bold text-gray-900 mb-2 z-10">이미지를 끌어다 놓으세요</h2>
+                  <p className="text-gray-500 font-medium z-10">또는 클릭하여 업로드 (최대 20MB)</p>
+                </div>
+              ) : (
+                <div className="relative rounded-[2rem] overflow-hidden bg-gray-50 min-h-[400px] flex items-center justify-center">
+                  <img
+                    src={imagePreview}
+                    alt="업로드된 이미지"
+                    className="max-h-[400px] w-full object-contain"
+                  />
+                  <button
+                    onClick={handleRemoveImage}
+                    className="absolute right-4 top-4 rounded-full bg-white shadow-lg p-2 hover:bg-red-500 hover:text-white transition-all"
+                  >
+                    <X className="h-5 w-5" />
+                  </button>
+                </div>
+              )}
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                onChange={handleImageSelect}
+                className="hidden"
+              />
             </div>
           ) : (
-            <div className="relative rounded-[2rem] overflow-hidden bg-gray-50 min-h-[400px] flex items-center justify-center">
-              <img
-                src={imagePreview}
-                alt="업로드된 이미지"
-                className="max-h-[400px] w-full object-contain"
+            /* Text Input Mode */
+            <div className="bento-card p-8 min-h-[400px] flex flex-col">
+              <div className="flex items-center gap-2 mb-4">
+                <Type className="h-5 w-5 text-purple-500" />
+                <h3 className="font-bold text-gray-900">텍스트 프롬프트 입력</h3>
+              </div>
+              <textarea
+                value={textPrompt}
+                onChange={(e) => setTextPrompt(e.target.value)}
+                placeholder={'예시: A beautiful Korean woman in a flowing white dress, standing in a field of lavender at golden hour, cinematic lighting, shot with 85mm lens, shallow depth of field, photorealistic style'}
+                className="flex-1 w-full bg-gray-50 border border-gray-200 rounded-2xl p-5 text-gray-700 font-medium outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all resize-none text-sm leading-relaxed"
               />
-              <button
-                onClick={handleRemoveImage}
-                className="absolute right-4 top-4 rounded-full bg-white shadow-lg p-2 hover:bg-red-500 hover:text-white transition-all"
-              >
-                <X className="h-5 w-5" />
-              </button>
+              <p className="mt-3 text-xs text-gray-400">
+                💡 Midjourney, DALL·E, Stable Diffusion 등에 사용하는 프롬프트를 붙여넣으세요.
+              </p>
             </div>
           )}
-          <input
-            ref={fileInputRef}
-            type="file"
-            accept="image/*"
-            onChange={handleImageSelect}
-            className="hidden"
-          />
         </div>
 
         {/* Right Panel */}
@@ -350,18 +425,18 @@ export default function DecomposePage() {
           {/* Analyze Button */}
           <button
             onClick={handleAnalyze}
-            disabled={!imageFile || isLoading}
+            disabled={(inputMode === 'image' ? !imageFile : !textPrompt.trim()) || isLoading}
             className="w-full py-6 rounded-[2rem] bg-gradient-to-r from-violet-600 via-purple-600 to-fuchsia-600 text-white font-bold text-lg shadow-xl shadow-purple-200 hover:shadow-2xl hover:shadow-purple-300 transform hover:-translate-y-1 transition-all flex items-center justify-center gap-3 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
           >
             {isLoading ? (
               <>
                 <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-white"></div>
-                <span>분석 중...</span>
+                <span>{inputMode === 'text' ? '분해 중...' : '분석 중...'}</span>
               </>
             ) : (
               <>
                 <Sparkles className="h-6 w-6" />
-                <span>이미지 분석 시작</span>
+                <span>{inputMode === 'text' ? '프롬프트 분해 시작' : '이미지 분석 시작'}</span>
               </>
             )}
           </button>

@@ -1,0 +1,16 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git remote add:*)",
+      "Bash(git branch:*)",
+      "Bash(git push:*)",
+      "Bash(npx next build:*)",
+      "Bash(git -C \"c:/MyApp/promptblocks\" add \"src/app/\\(dashboard\\)/decompose/page.tsx\" \"src/app/api/analyze-image/route.ts\" \"src/app/api/decompose/route.ts\")",
+      "Bash(git -C \"c:/MyApp/promptblocks\" commit -m \"$\\(cat <<''EOF''\nUpdate AI models to latest: GPT-5.2, Gemini 3 Pro/Flash\n\nCo-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>\nEOF\n\\)\")",
+      "Bash(git -C \"c:/MyApp/promptblocks\" status)",
+      "Bash(git -C \"c:/MyApp/promptblocks\" diff --cached --stat)",
+      "Bash(git -C \"c:/MyApp/promptblocks\" commit -m \"$\\(cat <<''EOF''\nAdd all missing source files for successful Vercel build\n\nCo-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>\nEOF\n\\)\")",
+      "Bash(git -C \"c:/MyApp/promptblocks\" push origin main)"
+    ]
+  }
+}

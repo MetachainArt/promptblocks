@@ -1,5 +1,6 @@
 // 사용자 설정 저장/로드 유틸리티 (Supabase + localStorage 폴백)
 import { createClient } from '@/lib/supabase/client';
+import { getCurrentUserId } from '@/lib/shared';
 
 const SETTINGS_KEYS = {
   openaiKey: 'openai_api_key',
@@ -38,13 +39,6 @@ function saveLocalSetting(key: keyof typeof SETTINGS_KEYS, value: string | null)
 }
 
 // ============ Supabase 메인 함수들 ============
-
-// 현재 사용자 ID 가져오기
-async function getCurrentUserId(): Promise<string | null> {
-  const supabase = createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  return user?.id || null;
-}
 
 // 설정 가져오기
 export async function getUserSettings(): Promise<UserSettings> {
