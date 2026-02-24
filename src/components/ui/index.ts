@@ -4,3 +4,7 @@ export { Textarea, type TextareaProps } from './Textarea';
 export { Card, CardHeader, CardTitle, CardContent, type CardProps } from './Card';
 export { Modal, type ModalProps } from './Modal';
 export { Loading, PageLoading, type LoadingProps } from './Loading';
+
+export { AutoSaveRecoveryModal } from './AutoSaveRecoveryModal';
+
+export { UsageGauge } from './UsageGauge';

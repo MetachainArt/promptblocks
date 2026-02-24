@@ -15,30 +15,25 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
         {label && (
           <label
             htmlFor={id}
-            className="mb-2 block text-sm font-medium text-white"
+            className="mb-2 block text-sm font-semibold text-[var(--color-text-primary)]"
           >
             {label}
           </label>
         )}
-        <div className="relative group">
-          {/* Glow effect */}
-          <div className="absolute -inset-0.5 bg-gradient-to-r from-[var(--color-primary)] to-blue-600 rounded-xl blur opacity-0 group-focus-within:opacity-30 transition duration-500"></div>
-          
-          <input
-            ref={ref}
-            id={id}
-            className={cn(
-              'relative w-full rounded-xl border bg-slate-950/80 px-5 py-4 text-base text-white placeholder:text-slate-500 transition-all',
-              'focus:outline-none focus:ring-0 focus:border-[var(--color-primary)]',
-              'disabled:opacity-50 disabled:cursor-not-allowed',
-              error
-                ? 'border-[var(--color-error)]'
-                : 'border-white/10 hover:border-white/20',
-              className
-            )}
-            {...props}
-          />
-        </div>
+        <input
+          ref={ref}
+          id={id}
+          className={cn(
+            'w-full rounded-xl border bg-[var(--color-surface-elevated)] px-4 py-3 text-sm text-[var(--color-text-primary)] transition-all placeholder:text-[var(--color-text-secondary)]',
+            'focus:border-[var(--color-primary)] focus:ring-2 focus:ring-[var(--color-primary)]/20 focus:outline-none',
+            'disabled:cursor-not-allowed disabled:opacity-50',
+            error
+              ? 'border-[var(--color-error)]'
+              : 'border-[var(--color-border)] hover:border-gray-300',
+            className
+          )}
+          {...props}
+        />
         {error && <p className="mt-2 text-sm text-[var(--color-error)]">{error}</p>}
       </div>
     );

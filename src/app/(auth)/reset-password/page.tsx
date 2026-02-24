@@ -21,11 +21,13 @@ function ResetPasswordContent() {
   useEffect(() => {
     // Supabase가 URL의 토큰을 자동 처리하므로 세션 상태 확인
     const checkSession = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+
       // 토큰 기반 접근인지 확인 (URL에 code 또는 type 파라미터가 있음)
       const hasResetToken = searchParams.get('code') || searchParams.get('type') === 'recovery';
-      
+
       if (session || hasResetToken) {
         setIsValidSession(true);
       }
@@ -33,7 +35,9 @@ function ResetPasswordContent() {
     };
 
     // Supabase 인증 상태 변경 리스너
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((event) => {
       if (event === 'PASSWORD_RECOVERY') {
         setIsValidSession(true);
         setIsChecking(false);
@@ -55,8 +59,8 @@ function ResetPasswordContent() {
       return;
     }
 
-    if (password.length < 6) {
-      toast.error('비밀번호는 최소 6자 이상이어야 합니다.');
+    if (password.length < 8) {
+      toast.error('비밀번호는 최소 8자 이상이어야 합니다.');
       return;
     }
 
@@ -78,7 +82,7 @@ function ResetPasswordContent() {
     }
 
     toast.success('비밀번호가 변경되었습니다. 로그인해주세요.');
-    
+
     // 로그아웃 후 로그인 페이지로 이동
     await supabase.auth.signOut();
     router.push('/login');
@@ -86,9 +90,9 @@ function ResetPasswordContent() {
 
   if (isChecking) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-[var(--color-background)]">
+      <div className="auth-page flex min-h-screen items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[var(--color-primary)] mx-auto"></div>
+          <div className="mx-auto h-8 w-8 animate-spin rounded-full border-b-2 border-[var(--color-primary)]"></div>
           <p className="mt-3 text-[var(--color-text-secondary)]">확인 중...</p>
         </div>
       </div>
@@ -97,9 +101,11 @@ function ResetPasswordContent() {
 
   if (!isValidSession) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-[var(--color-background)] px-4">
-        <div className="w-full max-w-md text-center">
-          <Blocks className="h-12 w-12 text-[var(--color-primary)] mx-auto" />
+      <div className="auth-page flex min-h-screen items-center justify-center px-4 py-10">
+        <div className="auth-card w-full max-w-md p-8 text-center">
+          <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-indigo-100 text-indigo-700">
+            <Blocks className="h-6 w-6" />
+          </div>
           <h1 className="mt-6 text-xl font-semibold text-[var(--color-text-primary)]">
             유효하지 않은 링크입니다
           </h1>
@@ -115,14 +121,18 @@ function ResetPasswordContent() {
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-[var(--color-background)] px-4">
-      <div className="w-full max-w-md">
+    <div className="auth-page flex min-h-screen items-center justify-center px-4 py-10">
+      <div className="auth-card w-full max-w-md p-6 sm:p-8">
         <div className="mb-8 text-center">
           <Link href="/" className="inline-flex items-center gap-2">
-            <Blocks className="h-8 w-8 text-[var(--color-primary)]" />
-            <span className="text-2xl font-bold text-[var(--color-text-primary)]">PromptBlocks</span>
+            <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-indigo-100 text-indigo-700">
+              <Blocks className="h-5 w-5" />
+            </span>
+            <span className="text-xl font-extrabold tracking-tight text-[var(--color-text-primary)]">
+              PromptBlocks
+            </span>
           </Link>
-          <h1 className="mt-6 text-2xl font-semibold text-[var(--color-text-primary)]">
+          <h1 className="mt-6 text-2xl font-black text-[var(--color-text-primary)]">
             새 비밀번호 설정
           </h1>
           <p className="mt-2 text-sm text-[var(--color-text-secondary)]">
@@ -156,10 +166,10 @@ function ResetPasswordContent() {
           </Button>
         </form>
 
-        <div className="mt-4 text-center">
+        <div className="mt-4 border-t border-[var(--color-border)] pt-4 text-center">
           <Link
             href="/login"
-            className="text-sm text-[var(--color-text-secondary)] hover:text-[var(--color-primary)] transition-colors"
+            className="text-sm text-[var(--color-text-secondary)] transition-colors hover:text-[var(--color-primary)]"
           >
             로그인 페이지로 돌아가기
           </Link>
@@ -171,9 +181,9 @@ function ResetPasswordContent() {
 
 function LoadingFallback() {
   return (
-    <div className="flex min-h-screen items-center justify-center bg-[var(--color-background)]">
+    <div className="auth-page flex min-h-screen items-center justify-center">
       <div className="text-center">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[var(--color-primary)] mx-auto"></div>
+        <div className="mx-auto h-8 w-8 animate-spin rounded-full border-b-2 border-[var(--color-primary)]"></div>
         <p className="mt-3 text-[var(--color-text-secondary)]">로딩 중...</p>
       </div>
     </div>

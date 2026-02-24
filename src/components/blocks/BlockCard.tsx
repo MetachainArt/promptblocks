@@ -1,6 +1,6 @@
 'use client';
 
-import { Check, Star, Trash2, Copy } from 'lucide-react';
+import { Check, Star, Trash2 } from 'lucide-react';
 import { cn } from '@/utils/cn';
 import { Card } from '@/components/ui';
 import { BLOCK_TYPE_LABELS, BLOCK_TYPE_COLORS, type BlockType } from '@/types';
@@ -8,10 +8,12 @@ import { BLOCK_TYPE_LABELS, BLOCK_TYPE_COLORS, type BlockType } from '@/types';
 export interface BlockCardProps {
   blockType: BlockType;
   content: string;
+  editable?: boolean;
   isSelected?: boolean;
   isFavorite?: boolean;
   selectable?: boolean;
   onToggle?: () => void;
+  onContentChange?: (value: string) => void;
   onFavoriteToggle?: () => void;
   onClick?: () => void;
   onDelete?: () => void;
@@ -21,10 +23,12 @@ export interface BlockCardProps {
 export function BlockCard({
   blockType,
   content,
+  editable = false,
   isSelected = false,
   isFavorite = false,
   selectable = false,
   onToggle,
+  onContentChange,
   onFavoriteToggle,
   onClick,
   onDelete,
@@ -64,7 +68,12 @@ export function BlockCard({
               className="text-[var(--color-text-secondary)] hover:text-[var(--color-warning)]"
               title="즐겨찾기"
             >
-              <Star className={cn('h-4 w-4', isFavorite && 'fill-[var(--color-warning)] text-[var(--color-warning)]')} />
+              <Star
+                className={cn(
+                  'h-4 w-4',
+                  isFavorite && 'fill-[var(--color-warning)] text-[var(--color-warning)]'
+                )}
+              />
             </button>
           )}
 
@@ -97,7 +106,16 @@ export function BlockCard({
       </div>
 
       {/* 콘텐츠 */}
-      <p className="line-clamp-3 text-sm text-[var(--color-text-secondary)]">{content}</p>
+      {editable ? (
+        <textarea
+          value={content}
+          onChange={(event) => onContentChange?.(event.target.value)}
+          onClick={(event) => event.stopPropagation()}
+          className="min-h-[92px] w-full resize-y rounded-lg border border-[var(--color-border)] bg-[var(--color-surface-elevated)] p-2 text-sm text-[var(--color-text-primary)] outline-none focus:border-[var(--color-primary)] focus:ring-1 focus:ring-[var(--color-primary)]/30"
+        />
+      ) : (
+        <p className="line-clamp-3 text-sm text-[var(--color-text-secondary)]">{content}</p>
+      )}
     </Card>
   );
 }

@@ -29,8 +29,8 @@ export default function SignupPage() {
       return;
     }
 
-    if (password.length < 6) {
-      toast.error('비밀번호는 6자 이상이어야 합니다.');
+    if (password.length < 8) {
+      toast.error('비밀번호는 8자 이상이어야 합니다.');
       return;
     }
 
@@ -42,7 +42,8 @@ export default function SignupPage() {
     });
 
     if (error) {
-      toast.error('회원가입에 실패했습니다. ' + error.message);
+      console.warn('signup failed:', error.message);
+      toast.error('회원가입에 실패했습니다. 입력값을 확인하고 다시 시도해주세요.');
       setIsLoading(false);
       return;
     }
@@ -52,17 +53,24 @@ export default function SignupPage() {
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-[var(--color-background)] px-4">
-      <div className="w-full max-w-md">
-        <div className="mb-8 text-center">
+    <div className="auth-page flex min-h-screen items-center justify-center px-4 py-10">
+      <div className="auth-card w-full max-w-md p-6 sm:p-8">
+        <div className="mb-6 text-center">
           <Link href="/" className="inline-flex items-center gap-2">
-            <Blocks className="h-8 w-8 text-[var(--color-primary)]" />
-            <span className="text-2xl font-bold text-[var(--color-text-primary)]">PromptBlocks</span>
+            <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-indigo-100 text-indigo-700">
+              <Blocks className="h-5 w-5" />
+            </span>
+            <span className="text-xl font-extrabold tracking-tight text-[var(--color-text-primary)]">
+              PromptBlocks
+            </span>
           </Link>
-          <h1 className="mt-6 text-2xl font-semibold text-[var(--color-text-primary)]">회원가입</h1>
+          <h1 className="mt-5 text-2xl font-black text-[var(--color-text-primary)]">회원가입</h1>
           <p className="mt-2 text-sm text-[var(--color-text-secondary)]">
             이미 계정이 있으신가요?{' '}
-            <Link href="/login" className="text-[var(--color-primary)] hover:underline">
+            <Link
+              href="/login"
+              className="font-semibold text-[var(--color-primary)] hover:underline"
+            >
               로그인
             </Link>
           </p>
@@ -83,7 +91,7 @@ export default function SignupPage() {
             id="password"
             type="password"
             label="비밀번호"
-            placeholder="6자 이상 입력"
+            placeholder="8자 이상 입력"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             autoComplete="new-password"
@@ -99,13 +107,21 @@ export default function SignupPage() {
             autoComplete="new-password"
           />
 
-          <Button type="submit" className="w-full" isLoading={isLoading}>
+          <Button type="submit" className="mt-1 w-full" isLoading={isLoading}>
             회원가입
           </Button>
         </form>
 
-        <p className="mt-6 text-center text-xs text-[var(--color-text-secondary)]">
-          회원가입 시 이용약관 및 개인정보처리방침에 동의하게 됩니다.
+        <p className="mt-6 border-t border-[var(--color-border)] pt-4 text-center text-xs text-[var(--color-text-secondary)]">
+          회원가입 시{' '}
+          <Link href="/terms" className="underline hover:text-[var(--color-primary)]">
+            이용약관
+          </Link>{' '}
+          및{' '}
+          <Link href="/privacy" className="underline hover:text-[var(--color-primary)]">
+            개인정보처리방침
+          </Link>
+          에 동의하게 됩니다.
         </p>
       </div>
     </div>

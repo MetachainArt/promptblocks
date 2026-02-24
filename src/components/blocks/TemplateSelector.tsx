@@ -1,10 +1,10 @@
 'use client';
 
 import { useState } from 'react';
-import { Sparkles, ChevronRight, X } from 'lucide-react';
+import { Sparkles, ChevronRight } from 'lucide-react';
 import { Button, Modal } from '@/components/ui';
 import { TEMPLATES, type Template } from '@/lib/templates';
-import { BLOCK_TYPE_LABELS, type BlockType } from '@/types';
+import { BLOCK_TYPE_LABELS } from '@/types';
 
 interface TemplateSelectorProps {
   onSelect: (template: Template) => void;
@@ -28,12 +28,7 @@ export function TemplateSelector({ onSelect }: TemplateSelectorProps) {
 
   return (
     <>
-      <Button
-        variant="secondary"
-        size="sm"
-        onClick={() => setIsOpen(true)}
-        className="gap-2"
-      >
+      <Button variant="secondary" size="sm" onClick={() => setIsOpen(true)} className="gap-2">
         <Sparkles className="h-4 w-4" />
         추천 템플릿
       </Button>
@@ -52,31 +47,29 @@ export function TemplateSelector({ onSelect }: TemplateSelectorProps) {
           </p>
 
           {/* 템플릿 목록 */}
-          <div className="grid gap-3 max-h-[400px] overflow-y-auto">
+          <div className="grid max-h-[400px] gap-3 overflow-y-auto">
             {TEMPLATES.map((template) => (
               <div
                 key={template.id}
                 onClick={() => handleSelectTemplate(template)}
-                className={`
-                  cursor-pointer rounded-lg border p-4 transition-all
-                  ${selectedTemplate?.id === template.id
+                className={`cursor-pointer rounded-lg border p-4 transition-all ${
+                  selectedTemplate?.id === template.id
                     ? 'border-[var(--color-primary)] bg-[var(--color-primary)]/10 ring-2 ring-[var(--color-primary)]/20'
                     : 'border-[var(--color-border)] bg-[var(--color-surface)] hover:border-[var(--color-primary)]/50'
-                  }
-                `}
+                } `}
               >
                 <div className="flex items-start gap-3">
                   <span className="text-2xl">{template.icon}</span>
-                  <div className="flex-1 min-w-0">
+                  <div className="min-w-0 flex-1">
                     <h3 className="font-semibold text-[var(--color-text-primary)]">
                       {template.name}
                     </h3>
-                    <p className="text-sm text-[var(--color-text-secondary)] mt-0.5">
+                    <p className="mt-0.5 text-sm text-[var(--color-text-secondary)]">
                       {template.description}
                     </p>
-                    
+
                     {/* 블록 타입 태그 */}
-                    <div className="flex flex-wrap gap-1.5 mt-2">
+                    <div className="mt-2 flex flex-wrap gap-1.5">
                       {template.blockTypes.map((type) => (
                         <span
                           key={type}
@@ -87,17 +80,21 @@ export function TemplateSelector({ onSelect }: TemplateSelectorProps) {
                       ))}
                     </div>
                   </div>
-                  <ChevronRight className={`h-5 w-5 text-[var(--color-text-secondary)] transition-transform ${
-                    selectedTemplate?.id === template.id ? 'rotate-90' : ''
-                  }`} />
+                  <ChevronRight
+                    className={`h-5 w-5 text-[var(--color-text-secondary)] transition-transform ${
+                      selectedTemplate?.id === template.id ? 'rotate-90' : ''
+                    }`}
+                  />
                 </div>
 
                 {/* 선택 시 예시 프롬프트 표시 */}
                 {selectedTemplate?.id === template.id && (
-                  <div className="mt-3 pt-3 border-t border-[var(--color-border)]">
-                    <p className="text-xs text-[var(--color-text-secondary)] mb-1">예시 프롬프트:</p>
+                  <div className="mt-3 border-t border-[var(--color-border)] pt-3">
+                    <p className="mb-1 text-xs text-[var(--color-text-secondary)]">
+                      예시 프롬프트:
+                    </p>
                     <p className="text-sm text-[var(--color-text-primary)] italic">
-                      "{template.examplePrompt}"
+                      &quot;{template.examplePrompt}&quot;
                     </p>
                   </div>
                 )}
@@ -116,10 +113,7 @@ export function TemplateSelector({ onSelect }: TemplateSelectorProps) {
             >
               취소
             </Button>
-            <Button
-              onClick={handleConfirm}
-              disabled={!selectedTemplate}
-            >
+            <Button onClick={handleConfirm} disabled={!selectedTemplate}>
               이 템플릿으로 시작
             </Button>
           </div>

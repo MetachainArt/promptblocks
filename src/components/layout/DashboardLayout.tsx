@@ -1,22 +1,33 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import { Sidebar } from './Sidebar';
 import { HelpManualModal } from '@/components/ui/HelpManualModal';
 import { toast } from 'sonner';
+import { CommandPalette } from './CommandPalette';
+import { OnboardingChecklist } from './OnboardingChecklist';
+import { getOnboardingState, type OnboardingState } from '@/lib/onboarding';
+import { trackProductEvent } from '@/lib/analytics';
+import { UsageGauge } from '@/components/ui';
 
 interface DashboardLayoutProps {
   children: React.ReactNode;
-  title?: string;
   userEmail?: string;
 }
 
-export function DashboardLayout({ children, title, userEmail }: DashboardLayoutProps) {
+export function DashboardLayout({ children, userEmail }: DashboardLayoutProps) {
   const router = useRouter();
   const supabase = createClient();
   const [isHelpOpen, setIsHelpOpen] = useState(false);
+  const [onboardingState, setOnboardingState] = useState<OnboardingState>(() =>
+    getOnboardingState()
+  );
+
+  useEffect(() => {
+    trackProductEvent('dashboard_visit');
+  }, []);
 
   const handleLogout = async () => {
     const { error } = await supabase.auth.signOut();
@@ -31,27 +42,40 @@ export function DashboardLayout({ children, title, userEmail }: DashboardLayoutP
   };
 
   return (
-    <div className="flex min-h-screen">
+    <div className="flex min-h-screen bg-[var(--color-background)]">
       {/* Sidebar */}
       <Sidebar onLogout={handleLogout} userEmail={userEmail} />
 
       {/* Main Content */}
-      <main className="flex-1 min-h-screen p-4 pt-16 lg:p-8 lg:ml-72">
+      <main className="min-h-screen flex-1 p-4 pt-16 lg:ml-72 lg:p-8">
         {/* Header */}
-        <header className="flex justify-end items-center mb-8 gap-4">
-          <button 
+        <header className="mb-7 flex items-center justify-end gap-3 rounded-2xl border border-[var(--color-border)] bg-white/80 p-3 shadow-sm backdrop-blur">
+          <UsageGauge />
+          <CommandPalette onOpenHelp={() => setIsHelpOpen(true)} />
+          <button
             onClick={() => setIsHelpOpen(true)}
-            className="w-12 h-12 rounded-2xl bg-white border border-gray-200 flex items-center justify-center text-gray-400 hover:text-purple-500 hover:border-purple-500 transition-colors shadow-sm group"
+            className="group flex h-11 w-11 items-center justify-center rounded-xl border border-[var(--color-border)] bg-white text-gray-400 shadow-sm transition-colors hover:border-indigo-300 hover:text-indigo-600"
             title="사용 설명서 보기"
           >
-            <svg className="w-6 h-6 group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            <svg
+              className="h-6 w-6 transition-transform group-hover:scale-110"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+              />
             </svg>
           </button>
         </header>
 
         {/* Page Content */}
-        <div className="max-w-6xl mx-auto w-full">
+        <div className="mx-auto w-full max-w-6xl">
+          <OnboardingChecklist state={onboardingState} onChange={setOnboardingState} />
           {children}
         </div>
 

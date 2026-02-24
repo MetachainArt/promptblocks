@@ -1,8 +1,22 @@
 // 프리셋 저장/로드 유틸리티 (Supabase + localStorage 폴백)
-import { type Block, type Preset, type PresetBlock } from '@/types';
+import { type Preset } from '@/types';
 import { createClient } from '@/lib/supabase/client';
 
 const PRESETS_KEY = 'promptblocks_presets';
+const PRESET_STYLE_META_KEY = 'promptblocks_preset_style_meta';
+
+export type StylePromptMode = 'artist' | 'safe';
+export type OutputPromptMode = 'standard' | 'midjourney';
+export type MidjourneyStyleVersion = 'none' | '4' | '6';
+
+export interface PresetStyleMeta {
+  artistNames: string[];
+  stylePromptMode: StylePromptMode;
+  outputPromptMode: OutputPromptMode;
+  midjourneySrefCodes: string;
+  midjourneyStyleWeight: number;
+  midjourneyStyleVersion: MidjourneyStyleVersion;
+}
 
 // 프리셋 + 블록 정보 타입
 export interface PresetWithBlocks extends Preset {
@@ -51,12 +65,72 @@ function getLocalPresets(): LocalPreset[] {
   }
 }
 
-function saveLocalPreset(name: string, blocks: Array<{ blockType: string; content: string; originalId: string }>): LocalPreset {
+function normalizeMidjourneyStyleWeight(value: number): number {
+  if (!Number.isFinite(value)) return 100;
+  return Math.min(1000, Math.max(0, Math.round(value)));
+}
+
+function normalizePresetStyleMeta(meta: PresetStyleMeta): PresetStyleMeta {
+  return {
+    artistNames: Array.from(new Set(meta.artistNames.filter(Boolean))),
+    stylePromptMode: meta.stylePromptMode === 'safe' ? 'safe' : 'artist',
+    outputPromptMode: meta.outputPromptMode === 'midjourney' ? 'midjourney' : 'standard',
+    midjourneySrefCodes: meta.midjourneySrefCodes.trim(),
+    midjourneyStyleWeight: normalizeMidjourneyStyleWeight(meta.midjourneyStyleWeight),
+    midjourneyStyleVersion:
+      meta.midjourneyStyleVersion === '4' || meta.midjourneyStyleVersion === '6'
+        ? meta.midjourneyStyleVersion
+        : 'none',
+  };
+}
+
+function getPresetStyleMetaMap(): Record<string, PresetStyleMeta> {
+  if (typeof window === 'undefined') return {};
+  const data = localStorage.getItem(PRESET_STYLE_META_KEY);
+  if (!data) return {};
+
+  try {
+    const parsed = JSON.parse(data) as Record<string, PresetStyleMeta>;
+    return parsed;
+  } catch {
+    return {};
+  }
+}
+
+function setPresetStyleMetaMap(map: Record<string, PresetStyleMeta>): void {
+  if (typeof window === 'undefined') return;
+  localStorage.setItem(PRESET_STYLE_META_KEY, JSON.stringify(map));
+}
+
+export function savePresetStyleMeta(presetId: string, meta: PresetStyleMeta): void {
+  const map = getPresetStyleMetaMap();
+  map[presetId] = normalizePresetStyleMeta(meta);
+  setPresetStyleMetaMap(map);
+}
+
+export function getPresetStyleMeta(presetId: string): PresetStyleMeta | null {
+  const map = getPresetStyleMetaMap();
+  const meta = map[presetId];
+  if (!meta) return null;
+  return normalizePresetStyleMeta(meta);
+}
+
+export function deletePresetStyleMeta(presetId: string): void {
+  const map = getPresetStyleMetaMap();
+  if (!map[presetId]) return;
+  delete map[presetId];
+  setPresetStyleMetaMap(map);
+}
+
+function saveLocalPreset(
+  name: string,
+  blocks: Array<{ blockType: string; content: string; originalId: string }>
+): LocalPreset {
   const presets = getLocalPresets();
   const newPreset: LocalPreset = {
     id: crypto.randomUUID(),
     name,
-    blocks: blocks.map((b, i) => ({ ...b, id: crypto.randomUUID() })),
+    blocks: blocks.map((b) => ({ ...b, id: crypto.randomUUID() })),
     createdAt: new Date().toISOString(),
   };
   presets.unshift(newPreset);
@@ -68,6 +142,7 @@ function deleteLocalPreset(id: string): void {
   const presets = getLocalPresets();
   const filtered = presets.filter((p) => p.id !== id);
   localStorage.setItem(PRESETS_KEY, JSON.stringify(filtered));
+  deletePresetStyleMeta(id);
 }
 
 // ============ Supabase 메인 함수들 ============
@@ -75,7 +150,9 @@ function deleteLocalPreset(id: string): void {
 // 현재 사용자 ID 가져오기
 async function getCurrentUserId(): Promise<string | null> {
   const supabase = createClient();
-  const { data: { user } } = await supabase.auth.getUser();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
   return user?.id || null;
 }
 
@@ -149,14 +226,16 @@ export async function getPresetWithBlocks(presetId: string): Promise<PresetWithB
   // 프리셋 블록들 (블록 정보 포함)
   const { data: presetBlocks, error: blocksError } = await supabase
     .from('preset_blocks')
-    .select(`
+    .select(
+      `
       order_index,
       blocks (
         id,
         block_type,
         content
       )
-    `)
+    `
+    )
     .eq('preset_id', presetId)
     .order('order_index');
 
@@ -218,9 +297,7 @@ export async function savePreset(
     order_index: index,
   }));
 
-  const { error: blocksError } = await supabase
-    .from('preset_blocks')
-    .insert(presetBlocksData);
+  const { error: blocksError } = await supabase.from('preset_blocks').insert(presetBlocksData);
 
   if (blocksError) {
     console.error('프리셋 블록 연결 실패:', blocksError);
@@ -268,16 +345,15 @@ export async function deletePreset(id: string): Promise<void> {
   const supabase = createClient();
 
   // preset_blocks는 CASCADE로 자동 삭제됨
-  const { error } = await supabase
-    .from('presets')
-    .delete()
-    .eq('id', id)
-    .eq('user_id', userId);
+  const { error } = await supabase.from('presets').delete().eq('id', id).eq('user_id', userId);
 
   if (error) {
     console.error('프리셋 삭제 실패:', error);
     deleteLocalPreset(id);
+    return;
   }
+
+  deletePresetStyleMeta(id);
 }
 
 // localStorage 프리셋 블록 가져오기 (비로그인 전용)

@@ -1,6 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { BLOCK_TYPES, type DecomposeResult } from '@/types';
-import { getAuthenticatedUser, unauthorizedResponse, checkRateLimit, rateLimitResponse } from '@/lib/auth';
+import {
+  getAuthenticatedUser,
+  unauthorizedResponse,
+  checkRateLimit,
+  rateLimitResponse,
+} from '@/lib/auth';
 
 // Image analysis system prompt - outputs in English
 const IMAGE_ANALYSIS_PROMPT = `You are an expert Image Prompt Rewriter specialized in creating high-quality English prompts for AI image generation models (Midjourney, DALL·E, Stable Diffusion, etc.).
@@ -51,7 +56,18 @@ Respond ONLY with the following JSON format:
 
 If an element is not present in the image, use an empty string.`;
 
-async function analyzeWithGPT(imageBase64: string, apiKey: string, model: string) {
+function buildImageAnalysisPrompt(modePreamble?: string): string {
+  const normalized = typeof modePreamble === 'string' ? modePreamble.trim() : '';
+  if (!normalized) return IMAGE_ANALYSIS_PROMPT;
+  return `${normalized}\n\n---\n\n${IMAGE_ANALYSIS_PROMPT}`;
+}
+
+async function analyzeWithGPT(
+  imageBase64: string,
+  apiKey: string,
+  model: string,
+  analysisPrompt: string
+) {
   const response = await fetch('https://api.openai.com/v1/chat/completions', {
     method: 'POST',
     headers: {
@@ -64,7 +80,7 @@ async function analyzeWithGPT(imageBase64: string, apiKey: string, model: string
         {
           role: 'user',
           content: [
-            { type: 'text', text: IMAGE_ANALYSIS_PROMPT },
+            { type: 'text', text: analysisPrompt },
             {
               type: 'image_url',
               image_url: {
@@ -95,7 +111,12 @@ async function analyzeWithGPT(imageBase64: string, apiKey: string, model: string
   return data.choices[0]?.message?.content;
 }
 
-async function analyzeWithGemini(imageBase64: string, apiKey: string, model: string) {
+async function analyzeWithGemini(
+  imageBase64: string,
+  apiKey: string,
+  model: string,
+  analysisPrompt: string
+) {
   // base64에서 data:image/... 부분 제거
   const base64Data = imageBase64.replace(/^data:image\/\w+;base64,/, '');
   const mimeType = imageBase64.match(/^data:(image\/\w+);/)?.[1] || 'image/jpeg';
@@ -111,7 +132,7 @@ async function analyzeWithGemini(imageBase64: string, apiKey: string, model: str
         contents: [
           {
             parts: [
-              { text: IMAGE_ANALYSIS_PROMPT },
+              { text: analysisPrompt },
               {
                 inline_data: {
                   mime_type: mimeType,
@@ -162,12 +183,16 @@ function parseResult(content: string): { prompt: string; result: DecomposeResult
     }
 
     return { prompt, result };
-  } catch (e) {
+  } catch {
     throw new Error('JSON 파싱에 실패했습니다.');
   }
 }
 
-const GEMINI_FALLBACKS = ['gemini-3-flash-preview', 'gemini-2.5-flash-preview-05-20', 'gemini-2.0-flash'];
+const GEMINI_FALLBACKS = [
+  'gemini-3-flash-preview',
+  'gemini-2.5-flash-preview-05-20',
+  'gemini-2.0-flash',
+];
 const GPT_FALLBACKS = ['gpt-5.2', 'gpt-5-mini', 'gpt-4o'];
 
 export async function POST(request: NextRequest) {
@@ -185,18 +210,24 @@ export async function POST(request: NextRequest) {
 
     const apiKey = request.headers.get('X-API-Key');
     const aiProvider = request.headers.get('X-AI-Provider') as 'gpt' | 'gemini';
-    const aiModel = request.headers.get('X-AI-Model') || (aiProvider === 'gemini' ? 'gemini-3-flash-preview' : 'gpt-5.2');
+    const aiModel =
+      request.headers.get('X-AI-Model') ||
+      (aiProvider === 'gemini' ? 'gemini-3-flash-preview' : 'gpt-5.2');
 
     if (!apiKey) {
       return NextResponse.json({ error: 'API 키가 필요합니다.' }, { status: 401 });
     }
 
     const body = await request.json();
-    const { image } = body;
+    const { image, modePreamble } = body;
 
     if (!image || typeof image !== 'string') {
       return NextResponse.json({ error: '이미지가 필요합니다.' }, { status: 400 });
     }
+
+    const analysisPrompt = buildImageAnalysisPrompt(
+      typeof modePreamble === 'string' ? modePreamble.slice(0, 4000) : undefined
+    );
 
     let content: string | null = null;
     const fallbacks = aiProvider === 'gemini' ? GEMINI_FALLBACKS : GPT_FALLBACKS;
@@ -206,15 +237,21 @@ export async function POST(request: NextRequest) {
     for (const model of modelsToTry) {
       try {
         if (aiProvider === 'gemini') {
-          content = await analyzeWithGemini(image, apiKey, model);
+          content = await analyzeWithGemini(image, apiKey, model, analysisPrompt);
         } else {
-          content = await analyzeWithGPT(image, apiKey, model);
+          content = await analyzeWithGPT(image, apiKey, model, analysisPrompt);
         }
         if (content) break;
       } catch (e) {
         lastError = e instanceof Error ? e : new Error(String(e));
         const msg = lastError.message.toLowerCase();
-        if (msg.includes('overloaded') || msg.includes('503') || msg.includes('429') || msg.includes('rate') || msg.includes('capacity')) {
+        if (
+          msg.includes('overloaded') ||
+          msg.includes('503') ||
+          msg.includes('429') ||
+          msg.includes('rate') ||
+          msg.includes('capacity')
+        ) {
           console.log(`Model ${model} overloaded, trying fallback...`);
           continue;
         }

@@ -52,24 +52,31 @@ export default function LoginPage() {
     });
     setIsResetting(false);
     if (error) {
-      toast.error('비밀번호 재설정 이메일 전송에 실패했습니다.');
-      return;
+      console.warn('reset password request failed:', error.message);
     }
-    toast.success('비밀번호 재설정 이메일이 발송되었습니다. 메일을 확인해주세요.');
+    toast.success('입력한 이메일로 비밀번호 재설정 안내를 전송했습니다. 메일함을 확인해주세요.');
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-[var(--color-background)] px-4">
-      <div className="w-full max-w-md">
-        <div className="mb-8 text-center">
+    <div className="auth-page flex min-h-screen items-center justify-center px-4 py-10">
+      <div className="auth-card w-full max-w-md p-6 sm:p-8">
+        <div className="mb-6 text-center">
           <Link href="/" className="inline-flex items-center gap-2">
-            <Blocks className="h-8 w-8 text-[var(--color-primary)]" />
-            <span className="text-2xl font-bold text-[var(--color-text-primary)]">PromptBlocks</span>
+            <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-indigo-100 text-indigo-700">
+              <Blocks className="h-5 w-5" />
+            </span>
+            <span className="text-xl font-extrabold tracking-tight text-[var(--color-text-primary)]">
+              PromptBlocks
+            </span>
           </Link>
-          <h1 className="mt-6 text-2xl font-semibold text-[var(--color-text-primary)]">로그인</h1>
+
+          <h1 className="mt-5 text-2xl font-black text-[var(--color-text-primary)]">로그인</h1>
           <p className="mt-2 text-sm text-[var(--color-text-secondary)]">
             계정이 없으신가요?{' '}
-            <Link href="/signup" className="text-[var(--color-primary)] hover:underline">
+            <Link
+              href="/signup"
+              className="font-semibold text-[var(--color-primary)] hover:underline"
+            >
               회원가입
             </Link>
           </p>
@@ -96,7 +103,7 @@ export default function LoginPage() {
             autoComplete="current-password"
           />
 
-          <Button type="submit" className="w-full" isLoading={isLoading}>
+          <Button type="submit" className="mt-1 w-full" isLoading={isLoading}>
             로그인
           </Button>
         </form>
@@ -105,11 +112,23 @@ export default function LoginPage() {
           <button
             onClick={handleResetPassword}
             disabled={isResetting}
-            className="text-sm text-[var(--color-text-secondary)] hover:text-[var(--color-primary)] transition-colors"
+            className="text-sm font-medium text-[var(--color-text-secondary)] transition-colors hover:text-[var(--color-primary)]"
           >
-            {isResetting ? '전송 중...' : '비밀번호를 잊으셨나요?'}
+            {isResetting ? '전송 중...' : '이메일로 비밀번호 재설정 링크 받기'}
           </button>
         </div>
+
+        <p className="mt-6 border-t border-[var(--color-border)] pt-4 text-center text-xs text-[var(--color-text-secondary)]">
+          계속 진행하면{' '}
+          <Link href="/terms" className="underline hover:text-[var(--color-primary)]">
+            이용약관
+          </Link>{' '}
+          및{' '}
+          <Link href="/privacy" className="underline hover:text-[var(--color-primary)]">
+            개인정보처리방침
+          </Link>
+          에 동의한 것으로 간주됩니다.
+        </p>
       </div>
     </div>
   );

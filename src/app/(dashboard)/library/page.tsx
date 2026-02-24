@@ -11,9 +11,13 @@ import {
   BLOCK_TYPE_COLORS,
   type BlockType,
   type Block,
+  type Collection,
 } from '@/types';
 import { getBlocks, toggleFavorite, deleteBlock } from '@/lib/blocks';
+import { getCollections } from '@/lib/collections';
 import { cn } from '@/utils/cn';
+import { completeOnboardingStep } from '@/lib/onboarding';
+import { trackProductEvent } from '@/lib/analytics';
 
 export default function LibraryPage() {
   const [blocks, setBlocks] = useState<Block[]>([]);
@@ -23,6 +27,10 @@ export default function LibraryPage() {
   const [expandedTypes, setExpandedTypes] = useState<Set<BlockType>>(new Set());
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [blockToDelete, setBlockToDelete] = useState<Block | null>(null);
+  const [collections, setCollections] = useState<Collection[]>([]);
+  const [collectionFilter, setCollectionFilter] = useState<string>('all');
+  const [favoritesOnly, setFavoritesOnly] = useState(false);
+  const [sortBy, setSortBy] = useState<'recent' | 'favorite' | 'type'>('recent');
 
   const loadBlocks = async () => {
     try {
@@ -43,6 +51,8 @@ export default function LibraryPage() {
 
   useEffect(() => {
     loadBlocks();
+    getCollections().then(setCollections);
+    completeOnboardingStep('visit_library');
   }, []);
 
   // 검색 디바운스 (300ms)
@@ -50,6 +60,11 @@ export default function LibraryPage() {
     const timer = setTimeout(() => setDebouncedSearch(searchQuery), 300);
     return () => clearTimeout(timer);
   }, [searchQuery]);
+
+  useEffect(() => {
+    if (!debouncedSearch.trim()) return;
+    trackProductEvent('library_search', { queryLength: debouncedSearch.trim().length });
+  }, [debouncedSearch]);
 
   const toggleExpanded = (type: BlockType) => {
     setExpandedTypes((prev) => {
@@ -111,10 +126,40 @@ export default function LibraryPage() {
 
   // 검색 필터링 (디바운스 적용)
   const filteredBlocks = useMemo(() => {
-    if (!debouncedSearch) return blocks;
-    const query = debouncedSearch.toLowerCase();
-    return blocks.filter((block) => block.content.toLowerCase().includes(query));
-  }, [blocks, debouncedSearch]);
+    const query = debouncedSearch.trim().toLowerCase();
+
+    const searched = blocks.filter((block) => {
+      const matchesSearch =
+        !query ||
+        block.content.toLowerCase().includes(query) ||
+        block.tags.some((tag) => tag.toLowerCase().includes(query)) ||
+        BLOCK_TYPE_LABELS[block.blockType].toLowerCase().includes(query);
+
+      const matchesCollection =
+        collectionFilter === 'all'
+          ? true
+          : collectionFilter === 'uncategorized'
+            ? !block.collectionId
+            : block.collectionId === collectionFilter;
+
+      const matchesFavorite = favoritesOnly ? block.isFavorite : true;
+
+      return matchesSearch && matchesCollection && matchesFavorite;
+    });
+
+    const sorted = [...searched];
+    if (sortBy === 'favorite') {
+      sorted.sort((a, b) => Number(b.isFavorite) - Number(a.isFavorite));
+    }
+    if (sortBy === 'type') {
+      sorted.sort((a, b) => a.blockType.localeCompare(b.blockType));
+    }
+    if (sortBy === 'recent') {
+      sorted.sort((a, b) => (a.updatedAt < b.updatedAt ? 1 : -1));
+    }
+
+    return sorted;
+  }, [blocks, collectionFilter, debouncedSearch, favoritesOnly, sortBy]);
 
   // 타입별로 그룹핑
   const blocksByType = BLOCK_TYPES.reduce(
@@ -133,8 +178,8 @@ export default function LibraryPage() {
       {/* 검색 및 컨트롤 */}
       <Card>
         <CardContent className="flex flex-wrap items-center gap-4">
-          <div className="relative flex-1 min-w-[200px]">
-            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--color-text-secondary)]" />
+          <div className="relative min-w-[200px] flex-1">
+            <Search className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-[var(--color-text-secondary)]" />
             <Input
               placeholder="블록 내용 검색..."
               value={searchQuery}
@@ -144,6 +189,39 @@ export default function LibraryPage() {
           </div>
 
           <div className="flex items-center gap-2">
+            <select
+              value={collectionFilter}
+              onChange={(event) => setCollectionFilter(event.target.value)}
+              className="rounded-md border border-[var(--color-border)] bg-[var(--color-surface)] px-2 py-2 text-xs"
+            >
+              <option value="all">전체 컬렉션</option>
+              <option value="uncategorized">미분류</option>
+              {collections.map((collection) => (
+                <option key={collection.id} value={collection.id}>
+                  {collection.emoji || '📁'} {collection.name}
+                </option>
+              ))}
+            </select>
+
+            <select
+              value={sortBy}
+              onChange={(event) => setSortBy(event.target.value as 'recent' | 'favorite' | 'type')}
+              className="rounded-md border border-[var(--color-border)] bg-[var(--color-surface)] px-2 py-2 text-xs"
+            >
+              <option value="recent">최신순</option>
+              <option value="favorite">즐겨찾기 우선</option>
+              <option value="type">타입순</option>
+            </select>
+
+            <Button
+              variant={favoritesOnly ? 'secondary' : 'ghost'}
+              size="sm"
+              onClick={() => setFavoritesOnly((prev) => !prev)}
+            >
+              <Star className="mr-1 h-4 w-4" />
+              즐겨찾기만
+            </Button>
+
             <span className="text-sm text-[var(--color-text-secondary)]">
               {searchQuery ? `${filteredTotal}/${totalBlocks}개` : `총 ${totalBlocks}개`}
             </span>
@@ -161,7 +239,7 @@ export default function LibraryPage() {
       {isLoading ? (
         <div className="flex items-center justify-center py-12">
           <div className="text-center">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[var(--color-primary)] mx-auto"></div>
+            <div className="mx-auto h-8 w-8 animate-spin rounded-full border-b-2 border-[var(--color-primary)]"></div>
             <p className="mt-3 text-[var(--color-text-secondary)]">블록 불러오는 중...</p>
           </div>
         </div>
@@ -189,7 +267,7 @@ export default function LibraryPage() {
               <div
                 key={type}
                 className={cn(
-                  'rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] overflow-hidden',
+                  'overflow-hidden rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)]',
                   !hasBlocks && 'opacity-50'
                 )}
               >
@@ -198,7 +276,7 @@ export default function LibraryPage() {
                   onClick={() => hasBlocks && toggleExpanded(type)}
                   disabled={!hasBlocks}
                   className={cn(
-                    'w-full flex items-center gap-3 p-4 text-left transition-colors',
+                    'flex w-full items-center gap-3 p-4 text-left transition-colors',
                     hasBlocks && 'hover:bg-[var(--color-background)]',
                     !hasBlocks && 'cursor-not-allowed'
                   )}
@@ -215,7 +293,7 @@ export default function LibraryPage() {
                   {/* 타입 배지 */}
                   <span
                     className={cn(
-                      'inline-flex items-center rounded px-2 py-1 text-xs font-medium text-white shrink-0',
+                      'inline-flex shrink-0 items-center rounded px-2 py-1 text-xs font-medium text-white',
                       colorClass
                     )}
                   >
@@ -223,15 +301,17 @@ export default function LibraryPage() {
                   </span>
 
                   {/* 설명 */}
-                  <span className="flex-1 text-sm text-[var(--color-text-secondary)] truncate">
+                  <span className="flex-1 truncate text-sm text-[var(--color-text-secondary)]">
                     {BLOCK_TYPE_DESCRIPTIONS[type]}
                   </span>
 
                   {/* 카운트 */}
                   <span
                     className={cn(
-                      'text-sm font-medium shrink-0',
-                      hasBlocks ? 'text-[var(--color-primary)]' : 'text-[var(--color-text-secondary)]'
+                      'shrink-0 text-sm font-medium',
+                      hasBlocks
+                        ? 'text-[var(--color-primary)]'
+                        : 'text-[var(--color-text-secondary)]'
                     )}
                   >
                     {typeBlocks.length}개
@@ -245,15 +325,15 @@ export default function LibraryPage() {
                       {typeBlocks.map((block) => (
                         <div
                           key={block.id}
-                          className="group flex items-start gap-3 rounded-md bg-[var(--color-surface)] p-3 border border-[var(--color-border)]"
+                          className="group flex items-start gap-3 rounded-md border border-[var(--color-border)] bg-[var(--color-surface)] p-3"
                         >
                           {/* 블록 내용 */}
-                          <p className="flex-1 text-sm text-[var(--color-text-primary)] line-clamp-2">
+                          <p className="line-clamp-2 flex-1 text-sm text-[var(--color-text-primary)]">
                             {block.content}
                           </p>
 
                           {/* 액션 버튼들 */}
-                          <div className="flex items-center gap-1 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
+                          <div className="flex shrink-0 items-center gap-1 opacity-0 transition-opacity group-hover:opacity-100">
                             <button
                               onClick={() => handleCopyContent(block.content)}
                               className="rounded p-1.5 text-[var(--color-text-secondary)] hover:bg-[var(--color-primary)]/10 hover:text-[var(--color-primary)]"
@@ -271,9 +351,7 @@ export default function LibraryPage() {
                               )}
                               title="즐겨찾기"
                             >
-                              <Star
-                                className={cn('h-4 w-4', block.isFavorite && 'fill-current')}
-                              />
+                              <Star className={cn('h-4 w-4', block.isFavorite && 'fill-current')} />
                             </button>
                             <button
                               onClick={() => handleDeleteClick(block)}
@@ -312,7 +390,7 @@ export default function LibraryPage() {
               <p className="font-medium text-[var(--color-text-primary)]">
                 {BLOCK_TYPE_LABELS[blockToDelete.blockType]}
               </p>
-              <p className="mt-1 text-[var(--color-text-secondary)] line-clamp-2">
+              <p className="mt-1 line-clamp-2 text-[var(--color-text-secondary)]">
                 {blockToDelete.content}
               </p>
             </div>
