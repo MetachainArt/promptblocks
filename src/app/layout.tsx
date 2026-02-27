@@ -65,6 +65,13 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="ko" className={inter.variable}>
+      <head>
+        <script
+          async
+          src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-4327440469164693"
+          crossOrigin="anonymous"
+        />
+      </head>
       <body className="antialiased font-sans">
         {children}
         <Toaster />
