@@ -48,11 +48,12 @@ export default function LoginPage() {
     }
     setIsResetting(true);
     const { error } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: `${window.location.origin}/reset-password`,
+      redirectTo: `${window.location.origin}/auth/callback?next=/reset-password`,
     });
     setIsResetting(false);
     if (error) {
-      console.warn('reset password request failed:', error.message);
+      toast.error('비밀번호 재설정 메일 전송에 실패했습니다. 잠시 후 다시 시도해주세요.');
+      return;
     }
     toast.success('입력한 이메일로 비밀번호 재설정 안내를 전송했습니다. 메일함을 확인해주세요.');
   };
